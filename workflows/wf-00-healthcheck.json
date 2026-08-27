@@ -1,0 +1,18 @@
+{
+  "name": "WF-00 Healthcheck",
+  "nodes": [
+    {"parameters": {}, "id": "manual-trigger", "name": "Manual Trigger", "type": "n8n-nodes-base.manualTrigger", "typeVersion": 1, "position": [0, 0]},
+    {"parameters": {"jsCode": "const checkedAt = new Date().toISOString();\nconst runId = `healthcheck_${checkedAt.replace(/[-:.]/g, '').slice(0, 15)}Z`;\nreturn [{ json: { run_id: runId, checked_at: checkedAt, expected: { raw_directory: '/files/raw', exports_directory: '/files/exports', technical_table: 'error_events', technical_key: 'healthcheck:wf-00' } } }];"}, "id": "build-run-context", "name": "Build run context", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [240, 0]},
+    {"parameters": {"jsCode": "const input = $input.first().json;\nconst components = [\n  { component: 'n8n_runtime', status: 'ok', latency_ms: 0, message: 'Workflow code node executed.', action: null },\n  { component: 'data_tables', status: 'warning', latency_ms: null, message: 'Configure a Data Table node to upsert technical key healthcheck:wf-00 into error_events.', action: 'Create/verify error_events Data Table from config/data-tables.json, then add a Data Table Upsert node here.' },\n  { component: 'raw_directory', status: 'warning', latency_ms: null, message: 'Verify local mount /files/raw with a file write/read node.', action: 'Add read/write file nodes and keep test file under data/raw/.healthcheck.json.' },\n  { component: 'exports_directory', status: 'warning', latency_ms: null, message: 'Verify local mount /files/exports with a file write/read node.', action: 'Add read/write file nodes and keep test file under exports/.healthcheck.json.' },\n  { component: 'france_travail_credentials', status: 'warning', latency_ms: null, message: 'Credential presence must be checked without exposing secret values.', action: 'Use a non-destructive auth check only after credentials are configured.' },\n  { component: 'sirene_credentials', status: 'warning', latency_ms: null, message: 'Optional credential not checked by this skeleton.', action: 'Configure only if the related enrichment workflow is enabled.' },\n  { component: 'pappers_credentials', status: 'warning', latency_ms: null, message: 'Optional credential not checked by this skeleton.', action: 'Configure only if Pappers enrichment is enabled and capped.' }\n];\nreturn [{ json: { run_id: input.run_id, checked_at: input.checked_at, overall_status: 'warning', components } }];"}, "id": "build-healthcheck-result", "name": "Build healthcheck result", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [520, 0]}
+  ],
+  "connections": {
+    "Manual Trigger": {"main": [[{"node": "Build run context", "type": "main", "index": 0}]]},
+    "Build run context": {"main": [[{"node": "Build healthcheck result", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"},
+  "staticData": null,
+  "pinData": {},
+  "versionId": "g8n-013-wf-00-healthcheck",
+  "meta": {"templateCredsSetupCompleted": false, "description": "Manual healthcheck skeleton. Local user must add Data Table and filesystem nodes in n8n, then run locally."},
+  "tags": ["G8N", "healthcheck", "WF-00"]
+}

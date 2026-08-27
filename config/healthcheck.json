@@ -1,0 +1,24 @@
+{
+  "version": "G8N-013",
+  "workflow_name": "WF-00 Healthcheck",
+  "technical_table": "error_events",
+  "technical_key": "healthcheck:wf-00",
+  "short_timeout_ms": 5000,
+  "components": [
+    { "key": "n8n_runtime", "required": true },
+    { "key": "data_tables", "required": true, "table": "error_events", "operation": "upsert" },
+    { "key": "raw_directory", "required": true, "path": "/files/raw" },
+    { "key": "exports_directory", "required": true, "path": "/files/exports" },
+    { "key": "france_travail_credentials", "required": false, "credential_name": "France Travail OAuth2" },
+    { "key": "sirene_credentials", "required": false, "credential_name": "SIRENE API" },
+    { "key": "pappers_credentials", "required": false, "credential_name": "Pappers API" }
+  ],
+  "result_schema": {
+    "run_id": "string",
+    "checked_at": "datetime_utc",
+    "overall_status": "ok|warning|error",
+    "components": [
+      { "component": "string", "status": "ok|warning|error", "latency_ms": "number|null", "message": "string", "action": "string|null" }
+    ]
+  }
+}
