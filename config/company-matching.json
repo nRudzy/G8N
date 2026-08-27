@@ -1,0 +1,107 @@
+{
+  "match_rule_version": "g8n.company-matching.v1",
+  "country_scope": "FR",
+  "purpose": "Resolve declared employer identity to SIREN/SIRET with explainable confidence before enrichment.",
+  "thresholds": {
+    "auto_match_min_score": 85,
+    "ambiguous_min_score": 60,
+    "paid_enrichment_min_score": 70,
+    "reject_below_score": 60
+  },
+  "normalization": {
+    "keep_original_values": true,
+    "fold_case": true,
+    "remove_accents_for_comparison": true,
+    "strip_legal_forms": ["sa", "sas", "sasu", "sarl", "eurl", "scop", "association", "ei", "eirl"],
+    "normalize_punctuation": true,
+    "collapse_whitespace": true,
+    "do_not_infer_hidden_company": true
+  },
+  "decision_tree": [
+    {
+      "step": "explicit_siret",
+      "description": "Use source-provided SIRET when syntactically valid and confirmed by authoritative lookup.",
+      "decision": "auto_match",
+      "base_score": 95,
+      "required_evidence": ["valid_siret", "authoritative_lookup_confirms_establishment"]
+    },
+    {
+      "step": "explicit_siren",
+      "description": "Use source-provided SIREN when syntactically valid, then choose establishment only with location evidence.",
+      "decision": "auto_match_or_ambiguous",
+      "base_score": 90,
+      "required_evidence": ["valid_siren", "authoritative_lookup_confirms_company"]
+    },
+    {
+      "step": "exact_name_location",
+      "description": "Match normalized declared company name with exact postal code or city when only one candidate remains.",
+      "decision": "auto_match",
+      "base_score": 85,
+      "required_evidence": ["exact_normalized_name", "exact_location", "single_candidate"]
+    },
+    {
+      "step": "brand_or_trade_name",
+      "description": "Match enseigne/trade name to legal entity only when authoritative candidate links the trade name and location.",
+      "decision": "auto_match_or_ambiguous",
+      "base_score": 78,
+      "required_evidence": ["trade_name_match", "location_match", "single_candidate"]
+    },
+    {
+      "step": "tolerant_name_location",
+      "description": "Use tolerant name similarity only with corroborating location or activity evidence.",
+      "decision": "ambiguous",
+      "base_score": 65,
+      "required_evidence": ["strong_name_similarity", "corroborating_location_or_activity"]
+    },
+    {
+      "step": "intermediary_or_hidden",
+      "description": "Recruitment agencies, anonymous employers and inferred clients are never auto-matched without legal evidence.",
+      "decision": "unresolved",
+      "base_score": 0,
+      "required_evidence": ["no_client_inference"]
+    }
+  ],
+  "score_contributions": {
+    "valid_siret": 45,
+    "valid_siren": 35,
+    "authoritative_lookup_confirms_establishment": 35,
+    "authoritative_lookup_confirms_company": 30,
+    "exact_normalized_name": 25,
+    "trade_name_match": 20,
+    "strong_name_similarity": 15,
+    "exact_postal_code": 20,
+    "exact_city": 12,
+    "activity_naf_consistent": 8,
+    "single_candidate": 15,
+    "multiple_same_name_candidates": -25,
+    "recruitment_agency_detected": -40,
+    "hidden_or_masked_company": -60,
+    "location_only": -50,
+    "stale_or_closed_establishment": -20
+  },
+  "reason_codes": {
+    "G8N_MATCH_EXPLICIT_SIRET": "Source provided a syntactically valid SIRET confirmed by authoritative lookup.",
+    "G8N_MATCH_EXPLICIT_SIREN": "Source provided a syntactically valid SIREN confirmed by authoritative lookup.",
+    "G8N_MATCH_EXACT_NAME_LOCATION": "Normalized name and location leave a single candidate.",
+    "G8N_MATCH_TRADE_NAME_LOCATION": "Trade name or enseigne is linked to one legal entity at the location.",
+    "G8N_MATCH_TOLERANT_AMBIGUOUS": "Tolerant match has some evidence but requires review.",
+    "G8N_MATCH_HOMONYM_AMBIGUOUS": "Multiple plausible candidates remain.",
+    "G8N_MATCH_AGENCY_NO_CLIENT_PROOF": "Intermediary detected; client cannot be inferred.",
+    "G8N_MATCH_HIDDEN_COMPANY": "Employer name is hidden or masked.",
+    "G8N_MATCH_LOCATION_ONLY_REJECTED": "Geography alone is insufficient.",
+    "G8N_MATCH_CLOSED_ESTABLISHMENT_REVIEW": "Candidate establishment appears closed or stale."
+  },
+  "storage": {
+    "match_table": "company_matches",
+    "company_table": "companies",
+    "store_original_declared_values": true,
+    "store_evidence_json": true,
+    "store_match_rule_version": true
+  },
+  "privacy": {
+    "no_paid_enrichment_under_threshold": true,
+    "no_inferred_client_from_agency": true,
+    "no_secret": true,
+    "synthetic_examples_only": true
+  }
+}

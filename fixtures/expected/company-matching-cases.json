@@ -1,0 +1,88 @@
+{
+  "fixture_version": "g8n.company-matching.expected.v1",
+  "match_rule_version": "g8n.company-matching.v1",
+  "source": "synthetic",
+  "cases": [
+    {
+      "name": "explicit_valid_siret",
+      "declared_company_name": "Atelier Rhône Services",
+      "declared_siret": "12345678900011",
+      "location": "Lyon",
+      "expected": {
+        "match_status": "matched",
+        "decision": "auto_match",
+        "min_score": 85,
+        "reason_codes": ["G8N_MATCH_EXPLICIT_SIRET"]
+      }
+    },
+    {
+      "name": "exact_name_postal_code_single_candidate",
+      "declared_company_name": "Boulangerie Étoile SAS",
+      "postal_code": "69003",
+      "location": "Lyon",
+      "expected": {
+        "match_status": "matched",
+        "decision": "auto_match",
+        "min_score": 85,
+        "reason_codes": ["G8N_MATCH_EXACT_NAME_LOCATION"]
+      }
+    },
+    {
+      "name": "trade_name_legal_name_linked",
+      "declared_company_name": "Café du Centre",
+      "postal_code": "44000",
+      "candidate_legal_name": "CDC Restauration SARL",
+      "expected": {
+        "match_status": "matched",
+        "decision": "auto_match_or_ambiguous",
+        "min_score": 78,
+        "reason_codes": ["G8N_MATCH_TRADE_NAME_LOCATION"]
+      }
+    },
+    {
+      "name": "same_name_two_cities",
+      "declared_company_name": "Garage Central",
+      "location": "Gironde",
+      "candidate_count": 2,
+      "expected": {
+        "match_status": "ambiguous",
+        "decision": "manual_review",
+        "max_score": 84,
+        "reason_codes": ["G8N_MATCH_HOMONYM_AMBIGUOUS"]
+      }
+    },
+    {
+      "name": "recruitment_agency_client_inference",
+      "declared_company_name": "Agence Interim Exemple",
+      "description_hint": "recrute pour son client industriel",
+      "expected": {
+        "match_status": "unresolved",
+        "decision": "no_auto_match",
+        "max_score": 59,
+        "reason_codes": ["G8N_MATCH_AGENCY_NO_CLIENT_PROOF"]
+      }
+    },
+    {
+      "name": "hidden_company",
+      "declared_company_name": "Entreprise confidentielle",
+      "location": "France",
+      "expected": {
+        "match_status": "unresolved",
+        "decision": "no_paid_enrichment",
+        "max_score": 59,
+        "reason_codes": ["G8N_MATCH_HIDDEN_COMPANY"]
+      }
+    },
+    {
+      "name": "location_only",
+      "declared_company_name": "",
+      "postal_code": "75011",
+      "expected": {
+        "match_status": "unresolved",
+        "decision": "reject_location_only",
+        "max_score": 59,
+        "reason_codes": ["G8N_MATCH_LOCATION_ONLY_REJECTED"]
+      }
+    }
+  ]
+}
