@@ -76,6 +76,7 @@ See [docs/company-exact-matching.md](docs/company-exact-matching.md) for determi
 See [docs/company-tolerant-matching.md](docs/company-tolerant-matching.md) for bounded fuzzy candidate ranking and ambiguity queue rules.
 See [docs/company-identity-consolidation.md](docs/company-identity-consolidation.md) for SIREN/SIRET consolidation, aliases and identity snapshots.
 See [docs/company-match-review-overrides.md](docs/company-match-review-overrides.md) for CSV ambiguity review and controlled human override imports.
+See [docs/pappers-targeted-enrichment.md](docs/pappers-targeted-enrichment.md) for gated Pappers enrichment, cache, whitelist and budget circuit breaker.
 
 ## Version
 

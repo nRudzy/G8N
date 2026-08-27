@@ -884,6 +884,67 @@
       }
     },
     {
+      "name": "pappers_cache",
+      "upsert_key": "cache_key",
+      "columns": {
+        "cache_key": {
+          "type": "string",
+          "required": true
+        },
+        "siren": {
+          "type": "string",
+          "required": true
+        },
+        "status": {
+          "type": "string",
+          "required": true,
+          "values": [
+            "cache_hit",
+            "enriched",
+            "deferred",
+            "provider_error",
+            "stale"
+          ]
+        },
+        "whitelisted_payload_json": {
+          "type": "string",
+          "required": true
+        },
+        "payload_hash": {
+          "type": "string",
+          "required": true
+        },
+        "source_version": {
+          "type": "string",
+          "required": true
+        },
+        "fetched_at": {
+          "type": "datetime_utc",
+          "required": true
+        },
+        "expires_at": {
+          "type": "datetime_utc",
+          "required": true
+        },
+        "last_error_code": {
+          "type": "string|null",
+          "required": false
+        },
+        "api_call_count": {
+          "type": "integer",
+          "required": true
+        },
+        "cost_units": {
+          "type": "number|null",
+          "required": false
+        },
+        "updated_at": {
+          "type": "datetime_utc",
+          "required": true
+        }
+      }
+    },
+    {
       "name": "company_enrichments",
       "upsert_key": "enrichment_key",
       "columns": {

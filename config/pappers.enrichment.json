@@ -1,0 +1,49 @@
+{
+  "pappers_enrichment_version": "g8n.pappers.enrichment.v1",
+  "enabled_by_default": false,
+  "credential_contract": {
+    "n8n_credential_name": "Pappers API — local",
+    "required_locally": true,
+    "do_not_commit_values": true
+  },
+  "eligibility_gate": {
+    "require_company_key": true,
+    "require_siren": true,
+    "min_identity_confidence": 85,
+    "min_signal_offer_count": 2,
+    "require_cache_absent_or_expired": true,
+    "skip_if_review_pending": true
+  },
+  "budget": {
+    "per_run_call_limit": 25,
+    "global_daily_call_limit": null,
+    "on_limit_reached": "deferred"
+  },
+  "cache": {
+    "table": "pappers_cache",
+    "key_template": "siren:{siren}",
+    "ttl_days": 30,
+    "serve_stale_on_provider_error": true
+  },
+  "field_whitelist": [
+    "siren",
+    "nom_entreprise",
+    "forme_juridique",
+    "date_creation",
+    "effectif",
+    "code_naf",
+    "libelle_code_naf",
+    "entreprise_cessee",
+    "date_cessee",
+    "procedure_collective",
+    "score_confidence_hint"
+  ],
+  "forbidden_fields": ["telephone", "email", "representants", "beneficiaires_effectifs", "documents"],
+  "statuses": ["disabled", "not_eligible", "cache_hit", "enriched", "deferred", "provider_error", "stale"],
+  "privacy": {
+    "no_personal_contacts": true,
+    "no_documents": true,
+    "no_secret": true,
+    "pappers_does_not_replace_sirene_identity": true
+  }
+}

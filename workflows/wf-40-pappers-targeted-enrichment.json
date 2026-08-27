@@ -1,0 +1,53 @@
+{
+  "name": "WF-40 — Pappers targeted enrichment",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual Pappers gate simulation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { pappers_enrichment_version: 'g8n.pappers.enrichment.v1', enabled: false, companies: [], cache_by_siren: {}, run_call_count: 0, per_run_call_limit: 25, now_utc: new Date().toISOString(), next_step: 'Enable and wire Pappers credential, cache and HTTP Request locally only after G8N-003.' } }];"
+      },
+      "id": "load-pappers-context",
+      "name": "Load — Pappers context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst plans = [];\nlet remaining = Math.max(0, input.per_run_call_limit - input.run_call_count);\nfor (const company of input.companies || []) {\n  const siren = String(company.siren || '').replace(/\\D/g, '');\n  const cache = input.cache_by_siren[siren] || null;\n  let status = 'not_eligible'; let reason = 'G8N_PAPPERS_NOT_ELIGIBLE'; let api_call_count = 0;\n  if (!input.enabled) { status = 'disabled'; reason = 'G8N_PAPPERS_DISABLED'; }\n  else if (!siren || siren.length !== 9 || !company.company_key) { status = 'not_eligible'; reason = 'G8N_PAPPERS_MISSING_SIREN'; }\n  else if ((company.identity_confidence || 0) < 85 || (company.active_offer_count || 0) < 2 || company.review_pending) { status = 'not_eligible'; reason = 'G8N_PAPPERS_GATE_FAILED'; }\n  else if (cache && cache.expires_at && new Date(cache.expires_at) > new Date(input.now_utc)) { status = 'cache_hit'; reason = 'G8N_PAPPERS_CACHE_HIT'; }\n  else if (remaining <= 0) { status = 'deferred'; reason = 'G8N_PAPPERS_BUDGET_REACHED'; }\n  else { status = 'enriched'; reason = 'G8N_PAPPERS_CALL_PLANNED'; api_call_count = 1; remaining -= 1; }\n  plans.push({ company_key: company.company_key, siren, enrichment_status: status, reason, api_call_count, cache_key: siren ? `siren:${siren}` : null, request_contract: status === 'enriched' ? { credential_name: 'Pappers API — local', whitelist_only: true } : null });\n}\nreturn [{ json: { ...input, pappers_enrichment_plans: plans, planned_api_call_count: plans.reduce((s, p) => s + p.api_call_count, 0) } }];"
+      },
+      "id": "apply-pappers-gate",
+      "name": "Gate — Eligibility cache and budget",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual Pappers gate simulation": {
+      "main": [[{ "node": "Load — Pappers context", "type": "main", "index": 0 }]]
+    },
+    "Load — Pappers context": {
+      "main": [[{ "node": "Gate — Eligibility cache and budget", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-036-wf-40-pappers-targeted-enrichment",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive Pappers gate skeleton. No HTTP node, credential, Data Table operation or test is executed by this export."
+  },
+  "tags": ["G8N", "Pappers", "enrichment", "cache", "budget"]
+}

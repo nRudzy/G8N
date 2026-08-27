@@ -1,0 +1,13 @@
+{
+  "fixture_version": "g8n.pappers-enrichment.expected.v1",
+  "pappers_enrichment_version": "g8n.pappers.enrichment.v1",
+  "source": "synthetic",
+  "cases": [
+    { "name": "under_threshold", "company": { "siren": "123456789", "identity_confidence": 70, "active_offer_count": 5 }, "expected": { "status": "not_eligible", "api_call_count": 0 } },
+    { "name": "eligible_cache_miss", "company": { "siren": "223456789", "identity_confidence": 90, "active_offer_count": 3 }, "cache": null, "expected": { "status": "enriched", "api_call_count": 1, "cache_write": true } },
+    { "name": "cache_hit", "company": { "siren": "223456789", "identity_confidence": 90, "active_offer_count": 3 }, "cache": { "fresh": true }, "expected": { "status": "cache_hit", "api_call_count": 0 } },
+    { "name": "quota_reached", "company": { "siren": "323456789", "identity_confidence": 92, "active_offer_count": 4 }, "run_call_count": 25, "expected": { "status": "deferred", "api_call_count": 0 } },
+    { "name": "sirene_pappers_status_divergence", "company": { "siren": "423456789", "identity_confidence": 91, "active_offer_count": 4, "sirene_status": "active" }, "pappers": { "entreprise_cessee": true }, "expected": { "status": "enriched", "divergence_flag": true } },
+    { "name": "disabled", "enabled": false, "company": { "siren": "523456789", "identity_confidence": 95, "active_offer_count": 8 }, "expected": { "status": "disabled", "api_call_count": 0 } }
+  ]
+}
