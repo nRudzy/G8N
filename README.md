@@ -58,6 +58,7 @@ docker compose down
 Structured business records belong in n8n Data Tables. Raw payloads and exports are deliberately ignored by Git.
 
 See [docs/local-stack.md](docs/local-stack.md) for backup, reset and the local validation procedure.
+See [docs/security-and-retention.md](docs/security-and-retention.md) before creating credentials, exporting a workflow or sharing diagnostic output.
 
 ## Version
 
