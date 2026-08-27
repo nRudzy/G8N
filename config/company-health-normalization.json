@@ -1,0 +1,56 @@
+{
+  "health_normalization_version": "g8n.company-health-normalization.v1",
+  "free_first_v1": true,
+  "pappers_required": false,
+  "llm_required": false,
+  "measure_statuses": ["known", "unknown", "not_applicable", "stale", "conflict"],
+  "measures": {
+    "administrative_state": {
+      "sources": ["sirene", "pappers_optional"],
+      "strong_penalty_requires": ["inactive", "cessation", "collective_procedure"]
+    },
+    "company_age": {
+      "source": "sirene",
+      "status_when_missing": "unknown"
+    },
+    "employee_band": {
+      "sources": ["sirene", "pappers_optional"],
+      "status_when_missing": "unknown"
+    },
+    "activity_naf": {
+      "source": "sirene",
+      "status_when_missing": "unknown"
+    },
+    "financials_available": {
+      "sources": ["pappers_optional"],
+      "missing_value_policy": "null_not_zero"
+    },
+    "risk_events_available": {
+      "sources": ["pappers_optional"],
+      "missing_value_policy": "unknown_not_safe"
+    }
+  },
+  "freshness": {
+    "fresh_days": 90,
+    "stale_days": 365,
+    "older_than_stale_status": "stale",
+    "stale_reduces_confidence_not_value": true
+  },
+  "conflicts": {
+    "sirene_active_pappers_inactive": "conflict",
+    "sirene_inactive_pappers_active": "conflict",
+    "do_not_overwrite_without_source_priority": true,
+    "visible_in_export": true
+  },
+  "penalty_policy": {
+    "no_financial_absence_penalty": true,
+    "strong_penalty_only_on_explicit_risk": true,
+    "unknown_reduces_confidence": true,
+    "not_credit_rating": true
+  },
+  "outputs": {
+    "table": "company_health_measures",
+    "risk_signals_separate_from_score": true,
+    "required_fields": ["company_key", "measure_key", "value", "status", "source", "as_of_date", "confidence", "reason"]
+  }
+}

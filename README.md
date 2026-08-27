@@ -77,6 +77,7 @@ See [docs/company-tolerant-matching.md](docs/company-tolerant-matching.md) for b
 See [docs/company-identity-consolidation.md](docs/company-identity-consolidation.md) for SIREN/SIRET consolidation, aliases and identity snapshots.
 See [docs/company-match-review-overrides.md](docs/company-match-review-overrides.md) for CSV ambiguity review and controlled human override imports.
 See [docs/pappers-targeted-enrichment.md](docs/pappers-targeted-enrichment.md) for gated Pappers enrichment, cache, whitelist and budget circuit breaker.
+See [docs/company-health-normalization.md](docs/company-health-normalization.md) for cautious legal/financial health normalization without false zeroes.
 
 ## Version
 

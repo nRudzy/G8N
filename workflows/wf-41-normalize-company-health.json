@@ -1,0 +1,53 @@
+{
+  "name": "WF-41 — Normalize company health",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual health normalization simulation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { health_normalization_version: 'g8n.company-health-normalization.v1', companies: [], sirene_by_company_key: {}, pappers_by_company_key: {}, now_utc: new Date().toISOString(), next_step: 'Wire local companies, SIRENE snapshots and optional Pappers cache. Pappers is not required.' } }];"
+      },
+      "id": "load-health-context",
+      "name": "Load — Health context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst daysBetween = (a, b) => Math.floor((new Date(b) - new Date(a)) / 86400000);\nconst measure = (company_key, code, value, status, source, as_of_date, confidence, reason) => ({ measure_key: `${company_key}:${input.health_normalization_version}:${code}`, company_key, measure_code: code, value: value ?? null, status, source, as_of_date: as_of_date || null, confidence, reason, health_normalization_version: input.health_normalization_version, updated_at: input.now_utc });\nconst out = [];\nfor (const company of input.companies || []) {\n  const key = company.company_key;\n  const sirene = input.sirene_by_company_key[key] || {};\n  const pappers = input.pappers_by_company_key[key] || null;\n  const sireneState = sirene.administrative_status || company.administrative_status || null;\n  const pappersInactive = pappers?.entreprise_cessee === true;\n  let adminStatus = sireneState ? 'known' : 'unknown';\n  let reason = sireneState ? 'G8N_HEALTH_SIRENE_ADMIN_STATE' : 'G8N_HEALTH_UNKNOWN_ADMIN_STATE';\n  if ((sireneState === 'active' && pappersInactive) || (sireneState === 'inactive' && pappers?.entreprise_cessee === false)) { adminStatus = 'conflict'; reason = 'G8N_HEALTH_PROVIDER_CONFLICT'; }\n  out.push(measure(key, 'administrative_state', sireneState || (pappersInactive ? 'inactive' : null), adminStatus, pappers ? 'sirene+pappers_optional' : 'sirene', sirene.as_of_date || pappers?.as_of_date || null, adminStatus === 'conflict' ? 0.55 : adminStatus === 'known' ? 0.9 : 0.35, reason));\n  out.push(measure(key, 'employee_band', sirene.employee_band || pappers?.effectif || null, sirene.employee_band || pappers?.effectif ? 'known' : 'unknown', sirene.employee_band ? 'sirene' : pappers ? 'pappers_optional' : 'none', sirene.as_of_date || pappers?.as_of_date || null, sirene.employee_band || pappers?.effectif ? 0.75 : 0.3, 'G8N_HEALTH_EMPLOYEE_BAND'));\n  const financialAsOf = pappers?.financial_as_of_date || null;\n  const financialAge = financialAsOf ? daysBetween(financialAsOf, input.now_utc) : null;\n  const financialStatus = !pappers ? 'unknown' : !financialAsOf ? 'unknown' : financialAge > 365 ? 'stale' : 'known';\n  out.push(measure(key, 'financials_available', pappers?.revenue ?? null, financialStatus, pappers ? 'pappers_optional' : 'none', financialAsOf, financialStatus === 'known' ? 0.75 : financialStatus === 'stale' ? 0.45 : 0.25, financialStatus === 'unknown' ? 'G8N_HEALTH_FINANCIAL_UNKNOWN_NOT_ZERO' : 'G8N_HEALTH_FINANCIAL_AVAILABLE'));\n  const risk = sireneState === 'inactive' || pappersInactive ? 'inactive_company' : pappers?.procedure_collective ? 'collective_procedure' : null;\n  out.push(measure(key, 'risk_signal', risk, risk ? 'known' : 'unknown', risk ? (pappersInactive ? 'pappers_optional' : 'sirene') : 'none', pappers?.as_of_date || sirene.as_of_date || null, risk ? 0.85 : 0.3, risk ? 'G8N_HEALTH_EXPLICIT_RISK' : 'G8N_HEALTH_NO_EXPLICIT_RISK_AVAILABLE'));\n}\nreturn [{ json: { ...input, company_health_measure_upserts: out, next_step: 'Wire company_health_measures upsert locally. Unknown is not a penalty.' } }];"
+      },
+      "id": "normalize-health-measures",
+      "name": "Normalize — Health measures",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual health normalization simulation": {
+      "main": [[{ "node": "Load — Health context", "type": "main", "index": 0 }]]
+    },
+    "Load — Health context": {
+      "main": [[{ "node": "Normalize — Health measures", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-037-wf-41-company-health-normalization",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive health normalization skeleton. No Pappers, LLM, API, Data Table operation or test is executed by this export."
+  },
+  "tags": ["G8N", "health", "SIRENE", "Pappers optional", "Data Tables"]
+}

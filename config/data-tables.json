@@ -1077,6 +1077,63 @@
       }
     },
     {
+      "name": "company_health_measures",
+      "upsert_key": "measure_key",
+      "columns": {
+        "measure_key": {
+          "type": "string",
+          "required": true
+        },
+        "company_key": {
+          "type": "string",
+          "required": true
+        },
+        "measure_code": {
+          "type": "string",
+          "required": true
+        },
+        "value": {
+          "type": "string|number|null",
+          "required": false
+        },
+        "status": {
+          "type": "string",
+          "required": true,
+          "values": [
+            "known",
+            "unknown",
+            "not_applicable",
+            "stale",
+            "conflict"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "required": true
+        },
+        "as_of_date": {
+          "type": "datetime_utc|null",
+          "required": false
+        },
+        "confidence": {
+          "type": "number",
+          "required": true
+        },
+        "reason": {
+          "type": "string",
+          "required": true
+        },
+        "health_normalization_version": {
+          "type": "string",
+          "required": true
+        },
+        "updated_at": {
+          "type": "datetime_utc",
+          "required": true
+        }
+      }
+    },
+    {
       "name": "lead_scores",
       "upsert_key": "score_key",
       "columns": {

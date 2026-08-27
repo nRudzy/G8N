@@ -1,0 +1,36 @@
+{
+  "fixture_version": "g8n.company-health-normalization.expected.v1",
+  "health_normalization_version": "g8n.company-health-normalization.v1",
+  "source": "synthetic",
+  "cases": [
+    {
+      "name": "active_without_published_accounts",
+      "sirene": { "administrative_status": "active", "created_at": "2018-01-10", "employee_band": "10-19" },
+      "pappers": null,
+      "expected": { "financial_status": "unknown", "financial_value": null, "strong_penalty": false, "works_without_pappers": true }
+    },
+    {
+      "name": "old_financial_data",
+      "pappers": { "financial_as_of_date": "2022-12-31", "revenue": 1200000 },
+      "now": "2026-08-27",
+      "expected": { "status": "stale", "confidence_reduced": true, "revenue_kept": 1200000 }
+    },
+    {
+      "name": "provider_status_conflict",
+      "sirene": { "administrative_status": "active" },
+      "pappers": { "entreprise_cessee": true },
+      "expected": { "status": "conflict", "visible": true, "not_arbitrarily_overwritten": true }
+    },
+    {
+      "name": "inactive_company",
+      "sirene": { "administrative_status": "inactive" },
+      "expected": { "status": "known", "risk_signal": "inactive_company", "strong_penalty_allowed": true }
+    },
+    {
+      "name": "pappers_unavailable",
+      "sirene": { "administrative_status": "active", "naf_code": "6201Z" },
+      "pappers_error": "G8N_PAPPERS_DISABLED",
+      "expected": { "status": "known", "financial_status": "unknown", "export_available": true }
+    }
+  ]
+}
