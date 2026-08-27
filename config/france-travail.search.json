@@ -1,0 +1,68 @@
+{
+  "config_version": "g8n.france-travail.search.v1",
+  "default_run_mode": "dry_run",
+  "country_scope": "FR",
+  "zone": {
+    "mode": "france_entire",
+    "region": null,
+    "departement": null,
+    "commune": null
+  },
+  "publication_window": {
+    "timezone": "UTC",
+    "relative_days": 7,
+    "start_utc": null,
+    "end_utc": null
+  },
+  "job_filters": {
+    "keywords": [
+      "formation",
+      "recrutement",
+      "alternance",
+      "commercial B2B"
+    ],
+    "rome_codes": [
+      "K2111",
+      "M1502",
+      "D1402"
+    ],
+    "contract_types": [
+      "CDI",
+      "CDD",
+      "MIS",
+      "FRA"
+    ]
+  },
+  "batch": {
+    "default_range": "0-49",
+    "max_results_per_manual_run": 50,
+    "hard_limit": 100
+  },
+  "overrides": {
+    "allowed": [
+      "zone.region",
+      "zone.departement",
+      "zone.commune",
+      "publication_window.start_utc",
+      "publication_window.end_utc",
+      "job_filters.keywords",
+      "job_filters.rome_codes",
+      "job_filters.contract_types",
+      "batch.default_range",
+      "default_run_mode"
+    ],
+    "forbidden": [
+      "credential",
+      "base_url",
+      "token",
+      "headers.Authorization"
+    ]
+  },
+  "validation": {
+    "refuse_if_start_after_end": true,
+    "refuse_if_batch_above_hard_limit": true,
+    "refuse_free_url_string": true,
+    "encode_query_parameters": true,
+    "require_config_version_in_ingestion_run": true
+  }
+}

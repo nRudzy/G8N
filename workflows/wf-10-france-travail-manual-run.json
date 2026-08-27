@@ -1,0 +1,111 @@
+{
+  "name": "WF-10 — France Travail manual search dry-run",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual search configuration",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\nconst end = now.toISOString();\nconst startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);\nconst start = startDate.toISOString();\nconst config = { config_version: 'g8n.france-travail.search.v1', run_mode: 'dry_run', zone: { mode: 'france_entire', region: null, departement: null, commune: null }, publication_window: { start_utc: start, end_utc: end }, job_filters: { keywords: ['formation', 'recrutement', 'alternance', 'commercial B2B'], rome_codes: ['K2111', 'M1502', 'D1402'], contract_types: ['CDI', 'CDD', 'MIS', 'FRA'] }, batch: { range: '0-49', max_results: 50 } };\nreturn [{ json: { run_id: `ft_manual_${end.replace(/[-:.]/g, '').slice(0, 15)}Z`, correlation_id: `ft_manual_${end.replace(/[-:.]/g, '').slice(0, 15)}Z`, schema_version: 'g8n.workflow-envelope.v1', source: { workflow_id: 'WF-10', workflow_name: 'WF-10 — France Travail manual search dry-run', node_name: 'Build — Default search config', origin: 'manual_local' }, timestamps: { received_at: end, started_at: end, finished_at: null }, payload: { config, overrides: {}, france_travail_query: null }, metadata: { environment: $env.G8N_ENVIRONMENT || 'local', fixture: String($env.G8N_MOCK_MODE || 'false').toLowerCase() === 'true', retry_count: 0 } } }];"
+      },
+      "id": "build-default-search-config",
+      "name": "Build — Default search config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst cfg = input.payload.config;\nconst start = new Date(cfg.publication_window.start_utc);\nconst end = new Date(cfg.publication_window.end_utc);\nconst rangeEnd = Number(String(cfg.batch.range).split('-')[1] || '0');\nconst errors = [];\nif (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) errors.push({ code: 'G8N_FT_INVALID_WINDOW', category: 'validation', message: 'Publication window is invalid or inverted.', recoverable: true, masked: true });\nif (rangeEnd + 1 > 100) errors.push({ code: 'G8N_FT_BATCH_TOO_LARGE', category: 'validation', message: 'Manual run batch exceeds hard limit.', recoverable: true, masked: true });\nconst params = { motsCles: cfg.job_filters.keywords.join(' '), range: cfg.batch.range, sort: 'date' };\nif (cfg.zone.region) params.region = cfg.zone.region;\nif (cfg.zone.departement) params.departement = cfg.zone.departement;\nif (cfg.zone.commune) params.commune = cfg.zone.commune;\nreturn [{ json: { ...input, status: errors.length ? 'error' : 'success', payload: { ...input.payload, france_travail_query: params, summary: { mode: cfg.run_mode, zone: cfg.zone.mode === 'france_entire' ? 'France entière' : cfg.zone, window_start_utc: cfg.publication_window.start_utc, window_end_utc: cfg.publication_window.end_utc, max_results: cfg.batch.max_results, config_version: cfg.config_version, dry_run: cfg.run_mode === 'dry_run' } }, timestamps: { ...input.timestamps, finished_at: new Date().toISOString() }, errors } }];"
+      },
+      "id": "validate-and-summarize-query",
+      "name": "Validate — Query parameters",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "dry-run-condition",
+              "leftValue": "={{ $json.payload.summary.dry_run }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-dry-run",
+      "name": "If — Dry-run only",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [780, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn [{ json: { ...input, payload: { ...input.payload, next_step: 'Review summary locally. Switch run_mode only after G8N-020 real auth is validated.' } } }];"
+      },
+      "id": "return-dry-run-summary",
+      "name": "Return — Dry-run summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, -120]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn [{ json: { ...input, status: 'error', errors: [{ code: 'G8N_FT_REAL_RUN_DISABLED_IN_EXPORT', category: 'configuration', message: 'Real run branch is intentionally disabled in this exported skeleton. Configure WF-20 and add the HTTP node locally after validation.', recoverable: true, masked: true }] } }];"
+      },
+      "id": "return-real-run-disabled",
+      "name": "Return — Real run disabled",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 120]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual search configuration": {
+      "main": [[{ "node": "Build — Default search config", "type": "main", "index": 0 }]]
+    },
+    "Build — Default search config": {
+      "main": [[{ "node": "Validate — Query parameters", "type": "main", "index": 0 }]]
+    },
+    "Validate — Query parameters": {
+      "main": [[{ "node": "If — Dry-run only", "type": "main", "index": 0 }]]
+    },
+    "If — Dry-run only": {
+      "main": [
+        [{ "node": "Return — Dry-run summary", "type": "main", "index": 0 }],
+        [{ "node": "Return — Real run disabled", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-021-wf-10-france-travail-manual-run",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive dry-run manual search workflow. No network call is executed by this exported skeleton."
+  },
+  "tags": ["G8N", "France Travail", "manual-run", "dry-run"]
+}
