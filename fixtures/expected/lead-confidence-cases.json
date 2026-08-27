@@ -1,0 +1,80 @@
+[
+  {
+    "case": "exact_fresh_match",
+    "inputs": {
+      "business_score": 72,
+      "identity": 0.98,
+      "source_quality": 0.95,
+      "freshness_days": { "offers": 1, "sirene": 10, "health": 30 },
+      "classification": 0.9,
+      "sirene_available": true,
+      "pappers_available": false,
+      "health_conflict": false
+    },
+    "expected": { "confidence_min": 85, "priority_export_allowed": true }
+  },
+  {
+    "case": "borderline_fuzzy_match",
+    "inputs": {
+      "business_score": 72,
+      "identity": 0.58,
+      "ambiguity_status": "ambiguous",
+      "source_quality": 0.85,
+      "freshness_days": { "offers": 2, "sirene": 15, "health": null },
+      "classification": 0.8,
+      "sirene_available": true,
+      "pappers_available": false,
+      "health_conflict": false
+    },
+    "expected": { "confidence_max": 55, "priority_export_allowed": false, "reason": "identity_ambiguous" }
+  },
+  {
+    "case": "stale_sirene",
+    "inputs": {
+      "business_score": 55,
+      "identity": 0.9,
+      "source_quality": 0.8,
+      "freshness_days": { "offers": 3, "sirene": 240, "health": null },
+      "classification": 0.75,
+      "sirene_available": true
+    },
+    "expected": { "reason": "stale_sirene_source" }
+  },
+  {
+    "case": "pappers_absent",
+    "inputs": {
+      "business_score": 64,
+      "identity": 0.88,
+      "source_quality": 0.82,
+      "freshness_days": { "offers": 4, "sirene": 20, "health": null },
+      "classification": 0.74,
+      "sirene_available": true,
+      "pappers_available": false
+    },
+    "expected": { "not_zero_confidence": true, "reason": "pappers_absent_neutral" }
+  },
+  {
+    "case": "health_conflict",
+    "inputs": {
+      "business_score": 80,
+      "identity": 0.95,
+      "source_quality": 0.9,
+      "freshness_days": { "offers": 1, "sirene": 5, "health": 20 },
+      "classification": 0.85,
+      "health_conflict": true
+    },
+    "expected": { "confidence_max": 50, "reason": "health_conflict" }
+  },
+  {
+    "case": "low_llm_ignored_for_v1",
+    "inputs": {
+      "business_score": 62,
+      "identity": 0.9,
+      "source_quality": 0.85,
+      "freshness_days": { "offers": 2, "sirene": 30, "health": null },
+      "deterministic_classification": 0.82,
+      "llm_classification": null
+    },
+    "expected": { "llm_required": false, "classification_source": "deterministic" }
+  }
+]

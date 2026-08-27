@@ -1,0 +1,74 @@
+{
+  "confidence_version": "g8n.lead-confidence.v1",
+  "range": {
+    "min": 0,
+    "max": 100
+  },
+  "minimum_priority_export_confidence": 65,
+  "subscores": [
+    {
+      "key": "identity",
+      "weight": 35,
+      "inputs": ["company_identity_confidence", "match_method", "ambiguity_status"],
+      "caps": [
+        { "when": "ambiguity_status == ambiguous", "max": 55, "reason_code": "identity_ambiguous" },
+        { "when": "match_method == manual_rejected", "max": 0, "reason_code": "identity_rejected" }
+      ]
+    },
+    {
+      "key": "source_quality",
+      "weight": 20,
+      "inputs": ["raw_payload_present", "canonical_required_fields_ratio", "deduplication_method"],
+      "penalties": [
+        { "when": "fallback_deduplication_used", "delta": -10, "reason_code": "fallback_deduplication" },
+        { "when": "required_fields_ratio < 0.7", "delta": -12, "reason_code": "incomplete_offer_data" }
+      ]
+    },
+    {
+      "key": "freshness",
+      "weight": 20,
+      "inputs": ["last_offer_seen_at", "last_sirene_seen_at", "last_health_seen_at"],
+      "half_life_days": {
+        "offers": 7,
+        "sirene": 90,
+        "health": 180
+      }
+    },
+    {
+      "key": "classification",
+      "weight": 15,
+      "inputs": ["deterministic_classification_confidence", "llm_classification_confidence"],
+      "policy": "deterministic_confidence_primary_llm_optional_disabled"
+    },
+    {
+      "key": "enrichment",
+      "weight": 10,
+      "inputs": ["sirene_available", "pappers_available", "health_conflict"],
+      "policy": "pappers_absent_is_neutral_when_sirene_reliable",
+      "caps": [
+        { "when": "health_conflict == true", "max": 50, "reason_code": "health_conflict" }
+      ]
+    }
+  ],
+  "reason_codes": {
+    "identity_ambiguous": "Company identity match is ambiguous",
+    "identity_rejected": "Company identity was rejected by review",
+    "fallback_deduplication": "Fallback deduplication lowers source quality",
+    "incomplete_offer_data": "Required canonical offer fields are incomplete",
+    "stale_offer_source": "Offer signal is stale",
+    "stale_sirene_source": "SIRENE identity data is stale",
+    "classification_low_confidence": "Job classification confidence is low",
+    "pappers_absent_neutral": "Pappers is absent but not required for V1 confidence when SIRENE is reliable",
+    "health_conflict": "Company health sources conflict"
+  },
+  "display": {
+    "score_side_by_side_with_confidence": true,
+    "export_fields": [
+      "score",
+      "confidence",
+      "freshness",
+      "confidence_breakdown_json",
+      "confidence_reasons_json"
+    ]
+  }
+}

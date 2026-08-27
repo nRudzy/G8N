@@ -86,6 +86,7 @@ See [docs/job-llm-classification-optional.md](docs/job-llm-classification-option
 See [docs/company-signal-aggregates.md](docs/company-signal-aggregates.md) for SIREN-level 24h/7d/30d recruitment signal aggregates.
 See [docs/company-derived-signals.md](docs/company-derived-signals.md) for acceleration, diversity, multi-site and recurrence formulas.
 See [docs/b2b-scoring-engine.md](docs/b2b-scoring-engine.md) for the deterministic versioned scoring engine and WF-70 contract.
+See [docs/lead-confidence-freshness.md](docs/lead-confidence-freshness.md) for confidence/freshness scoring beside business score.
 
 ## Version
 

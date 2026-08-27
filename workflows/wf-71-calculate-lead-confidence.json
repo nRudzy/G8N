@@ -1,0 +1,44 @@
+{
+  "name": "WF-71 Calculate Lead Confidence",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { confidence_version: 'g8n.lead-confidence.v1', minimum_priority_export_confidence: 65, leads: [], now_utc: new Date().toISOString(), next_step: 'Wire scored leads and source timestamps locally.' } }];"
+      },
+      "id": "load-confidence-context",
+      "name": "Load confidence context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ctx = $input.first().json;\nconst clamp = (n) => Math.max(0, Math.min(100, Number.isFinite(n) ? n : 0));\nconst freshnessScore = (days, halfLife) => days === null || days === undefined ? 50 : Math.round(100 * Math.pow(0.5, Math.max(0, days) / halfLife));\nconst scoreOne = (lead) => {\n  const reasons = [];\n  let identity = clamp((lead.identity ?? lead.company_identity_confidence ?? 0) * 100);\n  if (lead.ambiguity_status === 'ambiguous') { identity = Math.min(identity, 55); reasons.push('identity_ambiguous'); }\n  let source_quality = clamp((lead.source_quality ?? 0.7) * 100);\n  if (lead.fallback_deduplication_used) { source_quality -= 10; reasons.push('fallback_deduplication'); }\n  if ((lead.required_fields_ratio ?? 1) < 0.7) { source_quality -= 12; reasons.push('incomplete_offer_data'); }\n  source_quality = clamp(source_quality);\n  const f = lead.freshness_days || {};\n  const freshnessParts = { offers: freshnessScore(f.offers, 7), sirene: freshnessScore(f.sirene, 90), health: freshnessScore(f.health, 180) };\n  const freshness = Math.round((freshnessParts.offers * 0.5) + (freshnessParts.sirene * 0.35) + (freshnessParts.health * 0.15));\n  if ((f.offers ?? 0) > 30) reasons.push('stale_offer_source');\n  if ((f.sirene ?? 0) > 180) reasons.push('stale_sirene_source');\n  const classification = clamp((lead.deterministic_classification ?? lead.classification ?? 0.7) * 100);\n  if (classification < 55) reasons.push('classification_low_confidence');\n  let enrichment = lead.sirene_available ? 80 : 40;\n  if (!lead.pappers_available) reasons.push('pappers_absent_neutral');\n  if (lead.health_conflict) { enrichment = Math.min(enrichment, 50); reasons.push('health_conflict'); }\n  let confidence = Math.round(identity * 0.35 + source_quality * 0.20 + freshness * 0.20 + classification * 0.15 + enrichment * 0.10);\n  if (lead.health_conflict) confidence = Math.min(confidence, 50);\n  const breakdown = { identity, source_quality, freshness, freshnessParts, classification, enrichment };\n  return { ...lead, confidence_version: ctx.confidence_version, confidence, freshness, priority_export_allowed: confidence >= ctx.minimum_priority_export_confidence, confidence_breakdown_json: JSON.stringify(breakdown), confidence_reasons_json: JSON.stringify([...new Set(reasons)]), confidence_updated_at: ctx.now_utc };\n};\nreturn (ctx.leads || []).map((json) => ({ json: scoreOne(json) }));"
+      },
+      "id": "calculate-confidence",
+      "name": "Calculate confidence",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [540, 0]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Load confidence context", "type": "main", "index": 0 }]]
+    },
+    "Load confidence context": {
+      "main": [[{ "node": "Calculate confidence", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

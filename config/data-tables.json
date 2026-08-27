@@ -1521,6 +1521,14 @@
           "type": "string",
           "required": true
         },
+        "confidence_breakdown_json": {
+          "type": "string",
+          "required": false
+        },
+        "confidence_reasons_json": {
+          "type": "string",
+          "required": false
+        },
         "reasons_json": {
           "type": "string",
           "required": true
