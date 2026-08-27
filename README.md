@@ -82,6 +82,7 @@ See [docs/company-matching-benchmark.md](docs/company-matching-benchmark.md) for
 See [docs/job-taxonomy-training-needs.md](docs/job-taxonomy-training-needs.md) for the versioned tension job taxonomy and training-need mapping.
 See [docs/job-deterministic-classification.md](docs/job-deterministic-classification.md) for rule-based offer classification without LLM.
 See [docs/job-llm-classification-optional.md](docs/job-llm-classification-optional.md) for the disabled-by-default optional LLM classification contract.
+See [docs/company-signal-aggregates.md](docs/company-signal-aggregates.md) for SIREN-level 24h/7d/30d recruitment signal aggregates.
 
 ## Version
 

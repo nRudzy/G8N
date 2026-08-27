@@ -1,0 +1,37 @@
+{
+  "signal_version": "g8n.company-signals.v1",
+  "windows": [
+    {"window_key": "24h", "duration_hours": 24},
+    {"window_key": "7d", "duration_hours": 168},
+    {"window_key": "30d", "duration_hours": 720}
+  ],
+  "timezone_presentation": "Europe/Paris",
+  "calculation_time_basis": "UTC",
+  "reference_time_mode": "parameterized",
+  "company_level": "SIREN company_key",
+  "exclude_offer_statuses": ["duplicate", "rejected"],
+  "include_dedupe_statuses": ["new", "updated", "republication"],
+  "do_not_double_count_multi_need_offer": true,
+  "metrics": [
+    "active_offer_count",
+    "new_offer_count",
+    "deduplicated_offer_count",
+    "declared_position_count",
+    "job_family_count",
+    "establishment_count",
+    "tension_offer_count",
+    "tension_offer_share",
+    "first_published_at",
+    "last_published_at",
+    "contributor_offer_keys"
+  ],
+  "idempotency": {
+    "signal_key_template": "{company_key}:{window_key}:{reference_time_utc}:{signal_version}",
+    "upsert_replaces_same_signal": true
+  },
+  "privacy": {
+    "no_pappers_required": true,
+    "no_llm_required": true,
+    "synthetic_examples_only": true
+  }
+}

@@ -1289,6 +1289,70 @@
         "computed_at": {
           "type": "datetime_utc",
           "required": true
+        },
+        "new_offer_count": {
+          "type": "integer",
+          "required": true
+        },
+        "tension_offer_count": {
+          "type": "integer",
+          "required": true
+        },
+        "tension_offer_share": {
+          "type": "number",
+          "required": true
+        },
+        "first_published_at": {
+          "type": "datetime_utc|null",
+          "required": false
+        },
+        "last_published_at": {
+          "type": "datetime_utc|null",
+          "required": false
+        },
+        "contributor_offer_keys_json": {
+          "type": "string",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "company_signal_contributors",
+      "upsert_key": "contributor_key",
+      "columns": {
+        "contributor_key": {
+          "type": "string",
+          "required": true
+        },
+        "signal_key": {
+          "type": "string",
+          "required": true
+        },
+        "offer_key": {
+          "type": "string",
+          "required": true
+        },
+        "company_key": {
+          "type": "string",
+          "required": true
+        },
+        "window_key": {
+          "type": "string",
+          "required": true,
+          "values": [
+            "24h",
+            "7d",
+            "30d",
+            "90d"
+          ]
+        },
+        "signal_version": {
+          "type": "string",
+          "required": true
+        },
+        "updated_at": {
+          "type": "datetime_utc",
+          "required": true
         }
       }
     },

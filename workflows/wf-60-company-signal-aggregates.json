@@ -1,0 +1,53 @@
+{
+  "name": "WF-60 — Company signal aggregates",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual aggregate simulation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { signal_version: 'g8n.company-signals.v1', reference_time_utc: new Date().toISOString(), windows: [{ window_key: '24h', duration_hours: 24 }, { window_key: '7d', duration_hours: 168 }, { window_key: '30d', duration_hours: 720 }], offer_rows: [], classification_by_offer_key: {}, next_step: 'Wire filtered job_offers and classifications locally. No Pappers or LLM required.' } }];"
+      },
+      "id": "load-signal-context",
+      "name": "Load — Signal context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst ref = new Date(input.reference_time_utc);\nconst excluded = new Set(['duplicate', 'rejected']);\nconst byCompany = new Map();\nfor (const window of input.windows) {\n  const start = new Date(ref.getTime() - window.duration_hours * 3600000);\n  for (const offer of input.offer_rows || []) {\n    const published = new Date(offer.published_at || offer.first_seen_at || offer.updated_at);\n    if (!offer.company_key || excluded.has(offer.status) || published < start || published >= ref) continue;\n    const key = `${offer.company_key}:${window.window_key}`;\n    if (!byCompany.has(key)) byCompany.set(key, { company_key: offer.company_key, window_key: window.window_key, offer_keys: new Set(), new_offer_keys: new Set(), families: new Set(), establishments: new Set(), tension_offer_keys: new Set(), republications: 0, positions: 0, dates: [] });\n    const agg = byCompany.get(key);\n    const offerKey = offer.canonical_offer_key || offer.offer_key;\n    agg.offer_keys.add(offerKey);\n    if (offer.dedupe_status === 'new') agg.new_offer_keys.add(offerKey);\n    if (offer.dedupe_status === 'republication') agg.republications += 1;\n    if (offer.establishment_key) agg.establishments.add(offer.establishment_key);\n    agg.positions += Number(offer.declared_positions || 1);\n    agg.dates.push(published.toISOString());\n    const cls = input.classification_by_offer_key[offer.offer_key] || {};\n    for (const fam of JSON.parse(cls.family_ids_json || '[]')) agg.families.add(fam);\n    if (cls.is_tension_job) agg.tension_offer_keys.add(offerKey);\n  }\n}\nconst signal_upserts = [];\nconst contributor_upserts = [];\nfor (const agg of byCompany.values()) {\n  const active = agg.offer_keys.size;\n  const signal_key = `${agg.company_key}:${agg.window_key}:${input.reference_time_utc}:${input.signal_version}`;\n  signal_upserts.push({ signal_key, company_key: agg.company_key, window_key: agg.window_key, signal_version: input.signal_version, active_offer_count: active, new_offer_count: agg.new_offer_keys.size, declared_position_count: agg.positions, job_family_count: agg.families.size, site_count: agg.establishments.size, republication_count: agg.republications, tension_offer_count: agg.tension_offer_keys.size, tension_offer_share: active ? agg.tension_offer_keys.size / active : 0, first_published_at: agg.dates.sort()[0] || null, last_published_at: agg.dates.sort().slice(-1)[0] || null, contributor_offer_keys_json: JSON.stringify([...agg.offer_keys].sort()), confidence: 0.8, computed_at: new Date().toISOString() });\n  for (const offer_key of agg.offer_keys) contributor_upserts.push({ contributor_key: `${signal_key}:${offer_key}`, signal_key, offer_key, company_key: agg.company_key, window_key: agg.window_key, signal_version: input.signal_version });\n}\nreturn [{ json: { ...input, company_signal_upserts: signal_upserts, company_signal_contributor_upserts: contributor_upserts } }];"
+      },
+      "id": "compute-aggregates",
+      "name": "Compute — Aggregates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual aggregate simulation": {
+      "main": [[{ "node": "Load — Signal context", "type": "main", "index": 0 }]]
+    },
+    "Load — Signal context": {
+      "main": [[{ "node": "Compute — Aggregates", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-043-wf-60-company-signal-aggregates",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive company aggregate skeleton. No Data Table operation, Pappers, LLM or test is executed."
+  },
+  "tags": ["G8N", "signals", "aggregates", "SIREN", "Data Tables"]
+}

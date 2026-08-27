@@ -1,0 +1,42 @@
+{
+  "fixture_version": "g8n.company-signals.expected.v1",
+  "signal_version": "g8n.company-signals.v1",
+  "source": "synthetic",
+  "reference_time_utc": "2026-08-27T12:00:00Z",
+  "cases": [
+    {
+      "name": "nested_windows",
+      "company_key": "siren:123456789",
+      "expected": {"24h_active": 2, "7d_active": 4, "30d_active": 6}
+    },
+    {
+      "name": "boundary_offer",
+      "rule": "start inclusive, end exclusive",
+      "offer_time": "2026-08-26T12:00:00Z",
+      "window": "24h",
+      "expected": {"counted_once": true}
+    },
+    {
+      "name": "republication_not_duplicate",
+      "dedupe_status": "republication",
+      "expected": {"included": true, "republication_count": 1}
+    },
+    {
+      "name": "duplicate_excluded",
+      "status": "duplicate",
+      "expected": {"included": false}
+    },
+    {
+      "name": "multi_establishments",
+      "company_key": "siren:223456789",
+      "establishments": ["siret:22345678900021", "siret:22345678900034"],
+      "expected": {"establishment_count": 2, "company_signal_count": 1}
+    },
+    {
+      "name": "multi_family_offer_not_double_counted",
+      "offer_key": "france_travail:multi-family-001",
+      "family_ids": ["logistics_transport", "industry_maintenance"],
+      "expected": {"active_offer_count_increment": 1, "job_family_count_increment": 2}
+    }
+  ]
+}
