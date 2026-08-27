@@ -1,0 +1,122 @@
+{
+  "name": "WF-20 — France Travail auth spike",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual auth spike",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const startedAt = new Date().toISOString();\nconst mockMode = String($env.G8N_MOCK_MODE || 'false').toLowerCase() === 'true';\nreturn [{ json: { run_id: `ft_auth_spike_${startedAt.replace(/[-:.]/g, '').slice(0, 15)}Z`, correlation_id: `ft_auth_spike_${startedAt.replace(/[-:.]/g, '').slice(0, 15)}Z`, schema_version: 'g8n.workflow-envelope.v1', source: { workflow_id: 'WF-20', workflow_name: 'WF-20 — France Travail auth spike', node_name: 'Build — Auth spike envelope', origin: 'manual_local' }, timestamps: { received_at: startedAt, started_at: startedAt, finished_at: null }, payload: { mock_mode: mockMode, credential_name: 'G8N — France Travail — Offres — Local', base_url_env: 'G8N_FRANCE_TRAVAIL_BASE_URL', path_env: 'G8N_FRANCE_TRAVAIL_OFFERS_SEARCH_PATH', minimal_query: { motsCles: 'formation', range: '0-9', sort: 'date' }, mock_fixture: 'fixtures/france-travail/offres-smoke.json', cleaned_real_fixture_target: 'fixtures/france-travail/offres-auth-spike.cleaned.json' }, metadata: { environment: $env.G8N_ENVIRONMENT || 'local', fixture: mockMode, retry_count: 0 } } }];"
+      },
+      "id": "build-auth-spike-envelope",
+      "name": "Build — Auth spike envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "mock-mode-condition",
+              "leftValue": "={{ $json.payload.mock_mode }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-mock-mode-enabled",
+      "name": "If — Mock mode enabled",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn [{ json: { ...input, status: 'success', payload: { ...input.payload, result_source: 'mock_fixture', next_step: 'Load fixtures/france-travail/offres-smoke.json locally, then normalize in downstream workflows.' }, timestamps: { ...input.timestamps, finished_at: new Date().toISOString() }, errors: [] } }];"
+      },
+      "id": "return-mock-fixture-plan",
+      "name": "Return — Mock fixture envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [820, -120]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.G8N_FRANCE_TRAVAIL_BASE_URL + $env.G8N_FRANCE_TRAVAIL_OFFERS_SEARCH_PATH }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "motsCles", "value": "={{ $json.payload.minimal_query.motsCles }}" },
+            { "name": "range", "value": "={{ $json.payload.minimal_query.range }}" },
+            { "name": "sort", "value": "={{ $json.payload.minimal_query.sort }}" }
+          ]
+        },
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "request-france-travail-offers",
+      "name": "Request — France Travail minimal offers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [820, 120],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "LOCAL_CREDENTIAL_ID_TO_SET_AFTER_IMPORT",
+          "name": "G8N — France Travail — Offres — Local"
+        }
+      },
+      "notes": "Do not run until G8N-003 confirms access and the credential exists locally. Exported JSON contains only the credential name placeholder, not the secret."
+    }
+  ],
+  "connections": {
+    "Trigger — Manual auth spike": {
+      "main": [[{ "node": "Build — Auth spike envelope", "type": "main", "index": 0 }]]
+    },
+    "Build — Auth spike envelope": {
+      "main": [[{ "node": "If — Mock mode enabled", "type": "main", "index": 0 }]]
+    },
+    "If — Mock mode enabled": {
+      "main": [
+        [{ "node": "Return — Mock fixture envelope", "type": "main", "index": 0 }],
+        [{ "node": "Request — France Travail minimal offers", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-020-wf-20-france-travail-auth-spike",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive auth spike skeleton. Must be configured and executed only in the user's local n8n after G8N-003 access validation."
+  },
+  "tags": ["G8N", "France Travail", "auth-spike"]
+}

@@ -1,0 +1,86 @@
+{
+  "schema_version": "g8n.france-travail.auth.v1",
+  "credential": {
+    "n8n_name": "G8N — France Travail — Offres — Local",
+    "type": "oauth2_client_credentials_or_configured_provider",
+    "secret_storage": "n8n credential store only",
+    "forbidden_locations": [
+      "Git",
+      "Notion",
+      "workflow exported JSON",
+      "chat messages",
+      "raw payload fixtures"
+    ]
+  },
+  "environment": {
+    "base_url": {
+      "variable": "G8N_FRANCE_TRAVAIL_BASE_URL",
+      "required": true,
+      "default": null,
+      "note": "Fill from the official contract validated in G8N-003."
+    },
+    "token_url": {
+      "variable": "G8N_FRANCE_TRAVAIL_TOKEN_URL",
+      "required": true,
+      "default": null,
+      "note": "Fill from the official contract validated in G8N-003 if n8n credential setup needs it."
+    },
+    "offers_search_path": {
+      "variable": "G8N_FRANCE_TRAVAIL_OFFERS_SEARCH_PATH",
+      "required": true,
+      "default": null,
+      "note": "Fill from the official endpoint path validated in G8N-003."
+    },
+    "mock_mode": {
+      "variable": "G8N_MOCK_MODE",
+      "default": "false"
+    }
+  },
+  "minimal_query": {
+    "description": "Conservative first call parameters; all values can be reduced locally before running.",
+    "parameters": {
+      "motsCles": "formation",
+      "range": "0-9",
+      "sort": "date",
+      "departement": null,
+      "region": null
+    },
+    "network_call_allowed_in_cloud": false
+  },
+  "timeouts_and_retries": {
+    "timeout_ms": 10000,
+    "max_retries": 1,
+    "retry_on": [
+      408,
+      429,
+      500,
+      502,
+      503,
+      504
+    ],
+    "do_not_retry_on": [
+      400,
+      401,
+      403
+    ]
+  },
+  "pagination_and_quota_headers": {
+    "capture_if_present": [
+      "content-range",
+      "x-ratelimit-limit",
+      "x-ratelimit-remaining",
+      "x-ratelimit-reset",
+      "retry-after"
+    ],
+    "forbidden_headers": [
+      "authorization",
+      "cookie",
+      "set-cookie"
+    ]
+  },
+  "fixture_outputs": {
+    "cleaned_real_response_target": "fixtures/france-travail/offres-auth-spike.cleaned.json",
+    "template": "fixtures/france-travail/offres-auth-spike-template.json",
+    "mock_fallback": "fixtures/france-travail/offres-smoke.json"
+  }
+}

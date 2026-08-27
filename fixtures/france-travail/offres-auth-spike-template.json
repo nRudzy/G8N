@@ -1,0 +1,35 @@
+{
+  "fixture_schema_version": "g8n.fixture.france-travail.auth-spike.v1",
+  "source": "to_be_replaced_by_sanitized_real_response_after_local_validation",
+  "capture_date": null,
+  "dataset": "auth_spike_template",
+  "scenario": "real France Travail minimal response sanitized locally after G8N-003 credentials are available",
+  "sanitization_rules": [
+    "Remove Authorization, Cookie, Set-Cookie and any token-like headers.",
+    "Keep pagination and quota headers only when non-sensitive.",
+    "Keep only the minimum offer fields needed to compare with the canonical contract.",
+    "Do not include private Notion text, local logs, credentials or complete raw business exports."
+  ],
+  "request": {
+    "base_url_env": "G8N_FRANCE_TRAVAIL_BASE_URL",
+    "path_env": "G8N_FRANCE_TRAVAIL_OFFERS_SEARCH_PATH",
+    "params": {
+      "motsCles": "formation",
+      "range": "0-9",
+      "sort": "date"
+    }
+  },
+  "response": {
+    "status": "replace_after_local_call",
+    "headers": {
+      "content-range": null,
+      "x-ratelimit-limit": null,
+      "x-ratelimit-remaining": null,
+      "retry-after": null
+    },
+    "body": {
+      "resultats": []
+    }
+  },
+  "canonical_gap_log": []
+}

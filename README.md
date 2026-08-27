@@ -62,6 +62,7 @@ See [docs/security-and-retention.md](docs/security-and-retention.md) before crea
 See [docs/adr/README.md](docs/adr/README.md) for Architecture Decision Records and the ADR template.
 See [docs/workflow-conventions.md](docs/workflow-conventions.md) for workflow naming, run envelopes, error contracts and the n8n review checklist.
 See [docs/fixtures-and-reset.md](docs/fixtures-and-reset.md) for synthetic fixtures, mock mode and targeted local reset procedures.
+See [docs/france-travail-auth-spike.md](docs/france-travail-auth-spike.md) for the France Travail credential contract and unauthenticated cloud-safe auth spike skeleton.
 
 ## Version
 

@@ -1,0 +1,48 @@
+{
+  "schema_version": "g8n.france-travail.errors.v1",
+  "source": "implementation_baseline_until_G8N-003_confirms_real_codes",
+  "errors": [
+    {
+      "http_status": 400,
+      "category": "validation",
+      "retry": false,
+      "action": "Review query parameters and documented endpoint contract."
+    },
+    {
+      "http_status": 401,
+      "category": "credential",
+      "retry": false,
+      "action": "Refresh or recreate the local n8n credential without exposing the secret."
+    },
+    {
+      "http_status": 403,
+      "category": "authorization",
+      "retry": false,
+      "action": "Check application scope, subscription and contract status from G8N-003."
+    },
+    {
+      "http_status": 404,
+      "category": "configuration",
+      "retry": false,
+      "action": "Check base URL and endpoint path variables."
+    },
+    {
+      "http_status": 408,
+      "category": "timeout",
+      "retry": true,
+      "action": "Retry once with the configured timeout, then return an error envelope."
+    },
+    {
+      "http_status": 429,
+      "category": "rate_limit",
+      "retry": true,
+      "action": "Respect Retry-After when present and keep quota headers without sensitive values."
+    },
+    {
+      "http_status": 500,
+      "category": "upstream",
+      "retry": true,
+      "action": "Retry once, then keep a recoverable upstream error."
+    }
+  ]
+}
