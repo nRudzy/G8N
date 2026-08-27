@@ -1,0 +1,39 @@
+{
+  "fixture_version": "g8n.deduplication.expected.v1",
+  "source": "synthetic",
+  "cases": [
+    {
+      "name": "exact_replay",
+      "input": ["france_travail:FT-SMOKE-001", "france_travail:FT-SMOKE-001"],
+      "expected": {
+        "first": "new",
+        "second": "duplicate",
+        "counter_delta": {"new": 1, "duplicate": 1}
+      }
+    },
+    {
+      "name": "same_id_changed_payload",
+      "input": ["france_travail:FT-UPDATE-001-v1", "france_travail:FT-UPDATE-001-v2"],
+      "expected": {
+        "decision": "updated",
+        "reason": "G8N_DEDUP_SAME_SOURCE_CHANGED_HASH"
+      }
+    },
+    {
+      "name": "new_id_same_company_location_title",
+      "input": ["france_travail:FT-REPUB-001", "france_travail:FT-REPUB-002"],
+      "expected": {
+        "decision": "republication",
+        "reason": "G8N_DEDUP_FALLBACK_REPUBLICATION"
+      }
+    },
+    {
+      "name": "same_title_distinct_companies",
+      "input": ["france_travail:FT-DISTINCT-001", "france_travail:FT-DISTINCT-002"],
+      "expected": {
+        "decision": "new",
+        "reason": "G8N_DEDUP_DISTINCT_COMPANY_OR_LOCATION"
+      }
+    }
+  ]
+}

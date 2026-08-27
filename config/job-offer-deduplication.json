@@ -1,0 +1,64 @@
+{
+  "dedupe_version": "g8n.job-offer-deduplication.v1",
+  "source": "france_travail",
+  "primary_key": {
+    "name": "source_offer_key",
+    "template": "{source}:{source_offer_id}",
+    "confidence": 1
+  },
+  "fallback_fingerprint": {
+    "fields": [
+      "normalized_title",
+      "declared_company_name",
+      "city",
+      "postal_code",
+      "contract_type",
+      "published_at_date"
+    ],
+    "normalization": [
+      "lowercase",
+      "trim",
+      "collapse_spaces",
+      "remove_accents_for_fingerprint_only"
+    ],
+    "minimum_required_fields": [
+      "normalized_title",
+      "declared_company_name",
+      "city_or_postal_code"
+    ],
+    "confidence": 0.72
+  },
+  "decision_rules": {
+    "new": "no existing source key and no high-confidence fallback group",
+    "updated": "same source key with changed payload_hash or changed normalized fields",
+    "duplicate": "same source key and same dedupe_fingerprint",
+    "republication": "new source key linked to an existing fallback fingerprint group with distinct published_at"
+  },
+  "aggregation_policy": {
+    "count_in_active_offer_aggregates": ["new", "updated", "republication"],
+    "exclude_from_active_offer_aggregates": ["duplicate"],
+    "keep_duplicate_evidence": true
+  },
+  "republication": {
+    "group_key_template": "{source}:repub:{fallback_fingerprint}",
+    "date_distance_days_min": 1,
+    "date_distance_days_max": 180,
+    "same_company_location_required": true
+  },
+  "reason_codes": {
+    "same_source_same_hash": "G8N_DEDUP_SAME_SOURCE_SAME_HASH",
+    "same_source_changed_hash": "G8N_DEDUP_SAME_SOURCE_CHANGED_HASH",
+    "fallback_republication": "G8N_DEDUP_FALLBACK_REPUBLICATION",
+    "fallback_weak": "G8N_DEDUP_FALLBACK_WEAK",
+    "distinct_company_or_location": "G8N_DEDUP_DISTINCT_COMPANY_OR_LOCATION",
+    "missing_source_id": "G8N_DEDUP_MISSING_SOURCE_ID"
+  },
+  "counters": [
+    "new",
+    "updated",
+    "duplicate",
+    "republication",
+    "weak_fingerprint",
+    "distinct_same_title"
+  ]
+}

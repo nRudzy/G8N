@@ -1,0 +1,66 @@
+{
+  "name": "WF-21 — Deduplicate canonical job offers",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual dedupe batch",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { dedupe_version: 'g8n.job-offer-deduplication.v1', source: 'france_travail', normalized_rows: [], previous_by_source_key: {}, previous_by_fingerprint: {}, counters: { new: 0, updated: 0, duplicate: 0, republication: 0, weak_fingerprint: 0, distinct_same_title: 0 }, next_step: 'Wire job_offers lookups locally. This skeleton does not read or write Data Tables.' } }];"
+      },
+      "id": "load-dedupe-policy",
+      "name": "Load — Dedupe policy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst normalize = (value) => String(value || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('fr-FR').replace(/\\s+/g, ' ').trim();\nconst datePart = (value) => value ? String(value).slice(0, 10) : '';\nconst fingerprint = (row) => [row.normalized_title, row.declared_company_name, row.city || row.postal_code, row.contract_type, datePart(row.published_at)].map(normalize).join('|');\nconst rows = (input.normalized_rows || []).map((row) => {\n  const sourceKey = row.offer_key || `${input.source}:${row.source_offer_id || 'missing'}`;\n  const fp = row.dedupe_fingerprint || fingerprint(row);\n  const previousSource = input.previous_by_source_key[sourceKey] || null;\n  const previousGroup = input.previous_by_fingerprint[fp] || null;\n  let dedupeStatus = 'new';\n  let reason = 'G8N_DEDUP_NEW';\n  let confidence = row.source_offer_id ? 1 : 0.5;\n  let duplicateOf = null;\n  let canonical = sourceKey;\n  let republicationGroup = null;\n  if (previousSource && previousSource.dedupe_fingerprint === fp) { dedupeStatus = 'duplicate'; reason = 'G8N_DEDUP_SAME_SOURCE_SAME_HASH'; duplicateOf = previousSource.offer_key || sourceKey; canonical = duplicateOf; }\n  else if (previousSource) { dedupeStatus = 'updated'; reason = 'G8N_DEDUP_SAME_SOURCE_CHANGED_HASH'; canonical = previousSource.canonical_offer_key || sourceKey; }\n  else if (previousGroup && previousGroup.declared_company_name === row.declared_company_name && (previousGroup.city === row.city || previousGroup.postal_code === row.postal_code)) { dedupeStatus = 'republication'; reason = 'G8N_DEDUP_FALLBACK_REPUBLICATION'; republicationGroup = `${input.source}:repub:${fp}`; canonical = previousGroup.canonical_offer_key || previousGroup.offer_key; confidence = 0.72; }\n  else if (!row.source_offer_id) { reason = 'G8N_DEDUP_MISSING_SOURCE_ID'; confidence = 0.5; }\n  const out = { ...row, dedupe_fingerprint: fp, canonical_offer_key: canonical, republication_group_key: republicationGroup, duplicate_of_offer_key: duplicateOf, dedupe_status: dedupeStatus, dedupe_reasons_json: JSON.stringify([reason]), dedupe_confidence: confidence, first_seen_at: previousSource?.first_seen_at || row.first_seen_at || new Date().toISOString(), last_seen_at: new Date().toISOString(), status: dedupeStatus === 'duplicate' ? 'duplicate' : row.status || 'active' };\n  input.counters[dedupeStatus] = (input.counters[dedupeStatus] || 0) + 1;\n  return out;\n});\nreturn [{ json: { ...input, deduped_job_offer_upserts: rows } }];"
+      },
+      "id": "dedupe-normalized-offers",
+      "name": "Deduplicate — Normalized offers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn [{ json: { ...input, aggregate_policy: { exclude_statuses: ['duplicate'], keep_evidence: true }, next_step: 'Review counters and upserts, then wire Data Table upsert locally.' } }];"
+      },
+      "id": "return-dedupe-plan",
+      "name": "Return — Dedupe plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual dedupe batch": {
+      "main": [[{ "node": "Load — Dedupe policy", "type": "main", "index": 0 }]]
+    },
+    "Load — Dedupe policy": {
+      "main": [[{ "node": "Deduplicate — Normalized offers", "type": "main", "index": 0 }]]
+    },
+    "Deduplicate — Normalized offers": {
+      "main": [[{ "node": "Return — Dedupe plan", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-025-wf-21-deduplicate-job-offers",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive deduplication skeleton. No Data Table read/write or API call is executed by this export."
+  },
+  "tags": ["G8N", "France Travail", "deduplication", "republication", "Data Tables"]
+}
