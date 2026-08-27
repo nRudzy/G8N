@@ -1,0 +1,40 @@
+{
+  "name": "WF-12 — Read ingestion run skeleton",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual run lookup",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { requested_run_id: 'ft_raw_run_id_to_fill_locally', lookup_plan: { ingestion_runs: { table: 'ingestion_runs', filter: 'run_id equals requested_run_id' }, raw_job_offers: { table: 'raw_job_offers', filter: 'run_id equals requested_run_id', order_by: ['page_index', 'source_offer_id'] }, raw_files: { root_from: 'ingestion_runs.raw_root_path', verify: 'sha256 before downstream normalization' } }, privacy: { do_not_print_payloads: true, do_not_export_raw_files_to_git: true }, next_step: 'Wire Data Table read nodes and local file hash verification in n8n. This skeleton performs no read or write.' } }];"
+      },
+      "id": "prepare-read-plan",
+      "name": "Prepare — Read plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual run lookup": {
+      "main": [[{ "node": "Prepare — Read plan", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-023-wf-12-read-ingestion-run",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive run readback skeleton. It defines Data Table/file lookup strategy without executing reads."
+  },
+  "tags": ["G8N", "France Travail", "raw", "readback", "Data Tables"]
+}

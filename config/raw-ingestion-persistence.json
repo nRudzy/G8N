@@ -1,0 +1,70 @@
+{
+  "persistence_version": "g8n.raw-ingestion-persistence.v1",
+  "source": "france_travail",
+  "raw_root_template": "data/raw/france_travail/{yyyy-mm-dd}/{run_id}",
+  "page_file_template": "page-{page_index}-{range_start}-{range_end}.json",
+  "hash": {
+    "algorithm": "sha256",
+    "canonicalization": "stable JSON stringify with sorted keys",
+    "stored_fields": ["payload_hash", "raw_path", "raw_page_path"]
+  },
+  "run_upsert": {
+    "table": "ingestion_runs",
+    "key": "run_id",
+    "statuses": ["started", "partial", "completed", "failed", "cancelled"],
+    "required_fields": [
+      "run_id",
+      "source",
+      "status",
+      "started_at",
+      "schema_version",
+      "input_config_hash",
+      "raw_root_path",
+      "config_version",
+      "checkpoint_json",
+      "counters_json"
+    ]
+  },
+  "raw_offer_upsert": {
+    "table": "raw_job_offers",
+    "key": "raw_offer_key",
+    "key_template": "{source}:{source_offer_id}",
+    "required_fields": [
+      "raw_offer_key",
+      "run_id",
+      "source",
+      "source_offer_id",
+      "raw_path",
+      "raw_page_path",
+      "source_page_range",
+      "page_index",
+      "payload_hash",
+      "collected_at",
+      "first_seen_at",
+      "last_seen_at",
+      "payload_status"
+    ],
+    "payload_status_rules": {
+      "new": "no previous row for raw_offer_key",
+      "unchanged": "previous payload_hash equals current payload_hash",
+      "updated": "previous payload_hash differs from current payload_hash"
+    }
+  },
+  "page_commit_order": [
+    "write raw page file locally",
+    "compute page and offer sha256 hashes",
+    "upsert raw_job_offers metadata rows",
+    "update ingestion_runs counters and checkpoint",
+    "mark page persisted"
+  ],
+  "partial_write_detection": {
+    "do_not_advance_checkpoint_until": "all rows for page are upserted and page hash is recorded",
+    "replay_action": "rerun from checkpoint.next_range",
+    "altered_file_action": "fail verification before downstream normalization"
+  },
+  "privacy": {
+    "data_table_payload_copy": "forbidden",
+    "raw_payload_git_tracking": "forbidden",
+    "secrets_in_paths_or_logs": "forbidden"
+  }
+}

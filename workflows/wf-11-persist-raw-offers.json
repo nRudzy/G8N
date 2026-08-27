@@ -1,0 +1,79 @@
+{
+  "name": "WF-11 — Persist raw France Travail offers skeleton",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual raw page",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date().toISOString();\nconst runId = `ft_raw_${now.replace(/[-:.]/g, '').slice(0, 15)}Z`;\nconst day = now.slice(0, 10);\nreturn [{ json: { run_id: runId, schema_version: 'g8n.workflow-envelope.v1', persistence_version: 'g8n.raw-ingestion-persistence.v1', source: 'france_travail', status: 'started', timestamps: { started_at: now, completed_at: null }, raw_root_path: `data/raw/france_travail/${day}/${runId}`, config: { config_version: 'g8n.france-travail.search.v1', input_config_hash: 'manual-input-config-hash-placeholder' }, checkpoint: { last_persisted_range: null, next_range: '0-49' }, counters: { pages_written: 0, offers_seen: 0, offers_upserted: 0, new: 0, unchanged: 0, updated: 0, errors: 0 }, page: { page_index: 0, range: '0-49', raw_page_path: `data/raw/france_travail/${day}/${runId}/page-0-0-49.json`, page_hash: null, offers: [] }, persistence_result: { file_written: false, hashes_computed: false, rows_upserted: false, run_updated: false }, errors: [] } }];"
+      },
+      "id": "start-run",
+      "name": "Start — Run envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst collectedAt = new Date().toISOString();\nconst offers = input.page.offers || [];\nconst rows = offers.map((offer, index) => {\n  const sourceOfferId = String(offer.id || offer.source_offer_id || `missing-${index}`);\n  const previous = offer.previous || null;\n  const payloadHash = offer.payload_hash || 'sha256-placeholder-compute-locally';\n  const payloadStatus = !previous ? 'new' : previous.payload_hash === payloadHash ? 'unchanged' : 'updated';\n  return { raw_offer_key: `${input.source}:${sourceOfferId}`, run_id: input.run_id, source: input.source, source_offer_id: sourceOfferId, raw_path: `${input.page.raw_page_path}#offers/${index}`, raw_page_path: input.page.raw_page_path, source_page_range: input.page.range, page_index: input.page.page_index, payload_hash: payloadHash, collected_at: collectedAt, first_seen_at: previous?.first_seen_at || collectedAt, last_seen_at: collectedAt, payload_status: payloadStatus, source_updated_at: offer.dateActualisation || offer.updated_at || null };\n});\nconst statusCounts = rows.reduce((acc, row) => ({ ...acc, [row.payload_status]: (acc[row.payload_status] || 0) + 1 }), { new: 0, unchanged: 0, updated: 0 });\nreturn [{ json: { ...input, raw_job_offer_upserts: rows, counters: { ...input.counters, offers_seen: rows.length, new: statusCounts.new || 0, unchanged: statusCounts.unchanged || 0, updated: statusCounts.updated || 0 } } }];"
+      },
+      "id": "prepare-raw-offer-upserts",
+      "name": "Prepare — Raw offer upserts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst persistenceSucceeded = input.persistence_result.file_written && input.persistence_result.hashes_computed && input.persistence_result.rows_upserted && input.persistence_result.run_updated;\nconst checkpoint = persistenceSucceeded ? { last_persisted_range: input.page.range, next_range: input.checkpoint.next_range } : input.checkpoint;\nconst status = persistenceSucceeded ? 'partial' : 'started';\nconst ingestionRunUpsert = { run_id: input.run_id, source: input.source, status, started_at: input.timestamps.started_at, completed_at: null, schema_version: input.schema_version, input_config_hash: input.config.input_config_hash, raw_root_path: input.raw_root_path, config_version: input.config.config_version, checkpoint_json: JSON.stringify(checkpoint), counters_json: JSON.stringify(input.counters), notes: persistenceSucceeded ? 'Page persisted; ready for next checkpoint.' : 'Skeleton refused checkpoint advancement until file/hash/Data Table steps are marked successful.' };\nreturn [{ json: { ...input, status, checkpoint, ingestion_run_upsert: ingestionRunUpsert, checkpoint_advanced: persistenceSucceeded } }];"
+      },
+      "id": "prepare-run-checkpoint-upsert",
+      "name": "Prepare — Run checkpoint upsert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn [{ json: { ...input, timestamps: { ...input.timestamps, completed_at: new Date().toISOString() }, next_step: 'Wire local file write, SHA-256 computation and Data Table upsert nodes in n8n. This exported skeleton performs no write operation.' } }];"
+      },
+      "id": "return-persistence-plan",
+      "name": "Return — Persistence plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual raw page": {
+      "main": [[{ "node": "Start — Run envelope", "type": "main", "index": 0 }]]
+    },
+    "Start — Run envelope": {
+      "main": [[{ "node": "Prepare — Raw offer upserts", "type": "main", "index": 0 }]]
+    },
+    "Prepare — Raw offer upserts": {
+      "main": [[{ "node": "Prepare — Run checkpoint upsert", "type": "main", "index": 0 }]]
+    },
+    "Prepare — Run checkpoint upsert": {
+      "main": [[{ "node": "Return — Persistence plan", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-023-wf-11-persist-raw-offers",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive idempotent raw persistence skeleton. No file, Data Table or API write is executed by this export."
+  },
+  "tags": ["G8N", "France Travail", "raw", "idempotence", "Data Tables"]
+}
