@@ -1,0 +1,124 @@
+{
+  "version": "G8N-002",
+  "timezone": "Europe/Paris",
+  "window_bounds": {
+    "lower_bound": "inclusive",
+    "upper_bound": "exclusive",
+    "reference_time_field": "observed_at",
+    "windows": [
+      { "key": "24h", "duration_hours": 24 },
+      { "key": "7d", "duration_days": 7 },
+      { "key": "30d", "duration_days": 30 }
+    ]
+  },
+  "deduplication": {
+    "apply_before_signal_counting": true,
+    "same_offer_key_fields": ["source", "external_offer_id"],
+    "fallback_similarity_fields": ["company_siret", "normalized_title", "normalized_location", "contract_type"],
+    "republication_rule": "If a previously seen offer reappears with the same fallback identity after expiration, count it once as an active offer and increment republication_count instead of active_offer_count.",
+    "multi_position_rule": "If source headcount is available, keep one advert and count declared_positions. Otherwise count one advertised position with lower confidence."
+  },
+  "confidence": {
+    "base": 1.0,
+    "penalties": [
+      { "condition": "missing_company_identifier", "delta": -0.20 },
+      { "condition": "missing_declared_positions", "delta": -0.10 },
+      { "condition": "fallback_deduplication_used", "delta": -0.15 },
+      { "condition": "missing_location", "delta": -0.10 },
+      { "condition": "missing_contract_type", "delta": -0.05 }
+    ],
+    "minimum": 0.35
+  },
+  "signals": [
+    {
+      "key": "active_offer_volume",
+      "formula": "deduplicated_active_offers(window)",
+      "windows": ["24h", "7d", "30d"],
+      "weight": 20,
+      "hot_threshold": 12,
+      "qualified_threshold": 5
+    },
+    {
+      "key": "declared_position_volume",
+      "formula": "sum(max(declared_positions, 1) for deduplicated_active_offers(window))",
+      "windows": ["24h", "7d", "30d"],
+      "weight": 18,
+      "hot_threshold": 25,
+      "qualified_threshold": 8
+    },
+    {
+      "key": "acceleration",
+      "formula": "deduplicated_active_offers(7d) / max(deduplicated_active_offers(previous_7d), 1)",
+      "windows": ["7d"],
+      "weight": 14,
+      "hot_threshold": 2.0,
+      "qualified_threshold": 1.35
+    },
+    {
+      "key": "job_family_diversity",
+      "formula": "count(distinct normalized_job_family in deduplicated_active_offers(30d))",
+      "windows": ["30d"],
+      "weight": 10,
+      "hot_threshold": 4,
+      "qualified_threshold": 2
+    },
+    {
+      "key": "multi_site_presence",
+      "formula": "count(distinct normalized_work_location in deduplicated_active_offers(30d))",
+      "windows": ["30d"],
+      "weight": 10,
+      "hot_threshold": 4,
+      "qualified_threshold": 2
+    },
+    {
+      "key": "tension_job_share",
+      "formula": "tension_job_offers(30d) / max(deduplicated_active_offers(30d), 1)",
+      "windows": ["30d"],
+      "weight": 10,
+      "hot_threshold": 0.50,
+      "qualified_threshold": 0.25
+    },
+    {
+      "key": "recurrence",
+      "formula": "count(months_with_at_least_one_deduplicated_offer over trailing_90d)",
+      "windows": ["90d"],
+      "weight": 8,
+      "hot_threshold": 3,
+      "qualified_threshold": 2
+    },
+    {
+      "key": "republication_pressure",
+      "formula": "republication_count(30d) / max(deduplicated_active_offers(30d), 1)",
+      "windows": ["30d"],
+      "weight": -6,
+      "interpretation": "High republication pressure lowers confidence in pure volume and should not double count demand."
+    }
+  ],
+  "labels": {
+    "hot": {
+      "name": "Chaud",
+      "rule": "Strong offer or position volume plus at least one acceleration, multi-site, diversity, tension or recurrence signal with confidence >= 0.70."
+    },
+    "qualify": {
+      "name": "À qualifier",
+      "rule": "Moderate volume or strong niche signal with confidence >= 0.55."
+    },
+    "watch": {
+      "name": "Veille",
+      "rule": "Weak or early signal worth monitoring, or useful signal with confidence below 0.55."
+    },
+    "discard": {
+      "name": "Écarté",
+      "rule": "ICP hard exclusion, negligible volume, consumer/non-B2B employer, or signal explained only by duplicates/republications."
+    }
+  },
+  "tension_job_families": [
+    "production",
+    "logistics",
+    "transport",
+    "construction",
+    "healthcare",
+    "hospitality",
+    "maintenance"
+  ]
+}
