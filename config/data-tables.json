@@ -1493,6 +1493,14 @@
           "type": "number",
           "required": true
         },
+        "business_points": {
+          "type": "number",
+          "required": true
+        },
+        "risk_penalty_points": {
+          "type": "number",
+          "required": true
+        },
         "confidence": {
           "type": "number",
           "required": true
@@ -1501,13 +1509,37 @@
           "type": "number",
           "required": true
         },
+        "inputs_version": {
+          "type": "string",
+          "required": true
+        },
+        "breakdown_json": {
+          "type": "string",
+          "required": true
+        },
+        "penalties_json": {
+          "type": "string",
+          "required": true
+        },
         "reasons_json": {
           "type": "string",
+          "required": true
+        },
+        "score_as_of": {
+          "type": "datetime_utc",
           "required": true
         },
         "scored_at": {
           "type": "datetime_utc",
           "required": true
+        },
+        "is_current": {
+          "type": "boolean_string",
+          "required": true,
+          "values": [
+            "true",
+            "false"
+          ]
         }
       }
     },

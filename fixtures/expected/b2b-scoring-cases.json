@@ -1,0 +1,102 @@
+[
+  {
+    "case": "minimal",
+    "inputs": {
+      "active_offer_count_30d": 0,
+      "acceleration_index": null,
+      "tension_share_30d": 0,
+      "diversity_index": 0,
+      "multisite_index": 0,
+      "icp_score": 0,
+      "freshness_quality": 0.3,
+      "penalty_keys": ["missing_core_inputs"]
+    },
+    "expected": {
+      "business_points": 0,
+      "risk_penalty_points": -6,
+      "score": 0,
+      "top_reason": "Core scoring inputs are incomplete"
+    }
+  },
+  {
+    "case": "maximal",
+    "inputs": {
+      "active_offer_count_30d": 28,
+      "acceleration_index": 3.5,
+      "tension_share_30d": 0.72,
+      "diversity_index": 0.6,
+      "multisite_index": 6,
+      "icp_score": 70,
+      "freshness_quality": 0.95,
+      "penalty_keys": []
+    },
+    "expected": {
+      "business_points": 100,
+      "risk_penalty_points": 0,
+      "score": 100,
+      "top_reason": "Very high active offer volume over 30 days"
+    }
+  },
+  {
+    "case": "strong_penalty",
+    "inputs": {
+      "active_offer_count_30d": 12,
+      "acceleration_index": 2.2,
+      "tension_share_30d": 0.45,
+      "diversity_index": 0.3,
+      "multisite_index": 2,
+      "icp_score": 35,
+      "freshness_quality": 0.55,
+      "penalty_keys": ["high_republication", "low_confidence_identity", "stale_source"]
+    },
+    "expected": {
+      "business_points": 66,
+      "risk_penalty_points": -30,
+      "score": 36,
+      "top_reason": "High active offer volume over 30 days"
+    }
+  },
+  {
+    "case": "unknown_data",
+    "inputs": {
+      "active_offer_count_30d": 3,
+      "acceleration_index": null,
+      "tension_share_30d": null,
+      "diversity_index": null,
+      "multisite_index": null,
+      "icp_score": null,
+      "freshness_quality": 0.65,
+      "penalty_keys": ["missing_core_inputs"]
+    },
+    "expected": {
+      "business_points": 12,
+      "risk_penalty_points": -6,
+      "score": 6,
+      "top_reason": "At least one active offer over 30 days"
+    }
+  },
+  {
+    "case": "version_comparison",
+    "inputs": {
+      "mode": "simulate",
+      "company_key": "synthetic-company:comparison",
+      "rule_versions": ["g8n.b2b-scoring.v1", "g8n.b2b-scoring.v1-simulation"]
+    },
+    "expected": {
+      "does_not_replace_current": true,
+      "comparison_rows": 2
+    }
+  },
+  {
+    "case": "identical_replay",
+    "inputs": {
+      "company_key": "synthetic-company:replay",
+      "rule_version": "g8n.b2b-scoring.v1",
+      "score_key_template": "company_key:rule_version:current"
+    },
+    "expected": {
+      "current_rows_after_replay": 1,
+      "operation": "upsert"
+    }
+  }
+]

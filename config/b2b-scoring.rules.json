@@ -1,0 +1,121 @@
+{
+  "rule_version": "g8n.b2b-scoring.v1",
+  "status": "active",
+  "score_range": {
+    "min": 0,
+    "max": 100
+  },
+  "inputs_version": {
+    "icp": "G8N-001",
+    "company_health": "g8n.company-health-normalization.v1",
+    "job_taxonomy": "g8n.job-taxonomy.v1",
+    "company_signals": "g8n.company-signals.v1",
+    "derived_signals": "g8n.company-derived-signals.v1"
+  },
+  "components": [
+    {
+      "key": "volume",
+      "max_points": 25,
+      "input": "company_signals.active_offer_count_30d",
+      "thresholds": [
+        { "min": 20, "points": 25, "reason": "Very high active offer volume over 30 days" },
+        { "min": 10, "points": 18, "reason": "High active offer volume over 30 days" },
+        { "min": 5, "points": 12, "reason": "Moderate active offer volume over 30 days" },
+        { "min": 1, "points": 5, "reason": "At least one active offer over 30 days" }
+      ],
+      "unknown_points": 0
+    },
+    {
+      "key": "acceleration",
+      "max_points": 20,
+      "input": "company_derived_signals.acceleration_index",
+      "thresholds": [
+        { "min": 3, "points": 20, "reason": "Recruitment pace is sharply accelerating" },
+        { "min": 2, "points": 15, "reason": "Recruitment pace is accelerating" },
+        { "min": 1.2, "points": 8, "reason": "Recruitment pace is slightly above baseline" }
+      ],
+      "unknown_points": 0,
+      "cold_start_reason": "Acceleration is unknown because baseline is a cold start"
+    },
+    {
+      "key": "tension",
+      "max_points": 15,
+      "input": "classified_offer_family.tension_share_30d",
+      "thresholds": [
+        { "min": 0.6, "points": 15, "reason": "Majority of offers are in tension families" },
+        { "min": 0.35, "points": 10, "reason": "Significant share of offers are in tension families" },
+        { "min": 0.15, "points": 5, "reason": "Some tension-family hiring detected" }
+      ],
+      "unknown_points": 0
+    },
+    {
+      "key": "diversity_training",
+      "max_points": 10,
+      "input": "company_derived_signals.diversity_index and job_training_needs",
+      "thresholds": [
+        { "min": 0.45, "points": 10, "reason": "Diverse job families create cross-training opportunity" },
+        { "min": 0.25, "points": 6, "reason": "Several job families detected" },
+        { "min": 0.01, "points": 3, "reason": "Focused hiring still has a training angle" }
+      ],
+      "unknown_points": 0
+    },
+    {
+      "key": "multisite",
+      "max_points": 10,
+      "input": "company_derived_signals.multisite_index",
+      "thresholds": [
+        { "min": 5, "points": 10, "reason": "Hiring spans many proven establishments" },
+        { "min": 2, "points": 7, "reason": "Hiring spans multiple proven establishments" },
+        { "min": 1, "points": 2, "reason": "Single proven establishment" }
+      ],
+      "unknown_points": 0
+    },
+    {
+      "key": "icp",
+      "max_points": 10,
+      "input": "targeting.icp",
+      "thresholds": [
+        { "min": 55, "points": 10, "reason": "Company matches the V1 ICP" },
+        { "min": 30, "points": 6, "reason": "Company is partly aligned with the ICP" },
+        { "min": 10, "points": 2, "reason": "Company is only weakly aligned with the ICP" }
+      ],
+      "unknown_points": 0
+    },
+    {
+      "key": "freshness_quality",
+      "max_points": 10,
+      "input": "source_freshness and data_quality",
+      "thresholds": [
+        { "min": 0.85, "points": 10, "reason": "Fresh and high-quality source data" },
+        { "min": 0.65, "points": 7, "reason": "Usable source freshness and quality" },
+        { "min": 0.4, "points": 3, "reason": "Stale or incomplete but still usable source data" }
+      ],
+      "unknown_points": 0
+    }
+  ],
+  "penalties": {
+    "min_total": -30,
+    "rules": [
+      { "key": "hard_exclusion", "points": -30, "reason": "ICP hard exclusion applies" },
+      { "key": "high_republication", "points": -12, "when": "recurrence_rate >= 0.6", "reason": "Signal may be inflated by republications" },
+      { "key": "low_confidence_identity", "points": -10, "when": "company_identity_confidence < 0.6", "reason": "Company identity is uncertain" },
+      { "key": "stale_source", "points": -8, "when": "source_freshness < 0.4", "reason": "Source data is stale" },
+      { "key": "health_risk", "points": -8, "when": "company_health_status in risk states", "reason": "Legal or financial risk requires caution" },
+      { "key": "missing_core_inputs", "points": -6, "when": "required scoring inputs are missing", "reason": "Core scoring inputs are incomplete" }
+    ]
+  },
+  "current_score": {
+    "only_active_rule_can_write_current": true,
+    "score_key_template": "company_key:rule_version:current",
+    "simulation_key_template": "company_key:rule_version:simulation:score_as_of",
+    "replay_policy": "upsert_same_company_same_rule_current"
+  },
+  "simulation": {
+    "enabled": true,
+    "compare_versions": [
+      "g8n.b2b-scoring.v1",
+      "g8n.b2b-scoring.v1-simulation"
+    ],
+    "does_not_replace_current": true
+  }
+}
