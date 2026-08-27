@@ -1,0 +1,29 @@
+{
+  "llm_classifier_version": "g8n.job-llm-classifier.contract.v1",
+  "enabled_by_default": false,
+  "v1_policy": "Do not call LLM unless the user explicitly enables and funds/configures it locally.",
+  "feature_flag": "LLM_ENABLED",
+  "eligible_only_when": ["baseline_status_in:ambiguous,unclassified", "description_present", "taxonomy_loaded", "budget_available"],
+  "never_required_for_pipeline": true,
+  "prompt_version": "g8n.job-llm-prompt.v1",
+  "model_version": null,
+  "temperature": 0,
+  "budget": {
+    "per_run_call_limit": 0,
+    "global_daily_call_limit": 0,
+    "on_limit_reached": "fallback_deterministic"
+  },
+  "cache": {
+    "table": "job_llm_classification_cache",
+    "key_template": "{offer_fingerprint}:{taxonomy_version}:{prompt_version}:{model_version}",
+    "ttl_days": 30
+  },
+  "privacy": {
+    "send_minimum_text": true,
+    "no_personal_data": true,
+    "no_company_identification": true,
+    "no_free_text_output": true
+  },
+  "allowed_output_schema": "schema/job-llm-classification-output.schema.json",
+  "invalid_output_policy": "fallback_deterministic"
+}

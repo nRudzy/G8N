@@ -1,0 +1,53 @@
+{
+  "name": "WF-51 — Optional LLM job classification contract",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual optional LLM simulation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { llm_classifier_version: 'g8n.job-llm-classifier.contract.v1', llm_enabled: false, budget_remaining: 0, baseline_rows: [], provider_outputs_by_offer_key: {}, allowed_family_ids: [], allowed_training_need_ids: [], next_step: 'Keep disabled for V1. Wire a provider only later if explicitly enabled and budgeted.' } }];"
+      },
+      "id": "load-llm-context",
+      "name": "Load — Optional LLM context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst allowedFamilies = new Set(input.allowed_family_ids || []);\nconst allowedNeeds = new Set(input.allowed_training_need_ids || []);\nconst plans = [];\nlet remaining = input.budget_remaining || 0;\nfor (const row of input.baseline_rows || []) {\n  const eligible = input.llm_enabled && ['ambiguous','unclassified'].includes(row.classification_status) && row.description_excerpt && remaining > 0;\n  if (!eligible) { plans.push({ offer_key: row.offer_key, status: input.llm_enabled ? 'skipped_not_eligible_or_budget' : 'skipped_disabled', fallback: true, api_call_count: 0 }); continue; }\n  remaining -= 1;\n  const out = input.provider_outputs_by_offer_key[row.offer_key];\n  let status = 'accepted_optional'; let reason = null;\n  if (!out || typeof out !== 'object') { status = 'invalid_output'; reason = 'G8N_LLM_INVALID_JSON'; }\n  else if ((out.family_ids || []).some((id) => !allowedFamilies.has(id)) || (out.training_need_ids || []).some((id) => !allowedNeeds.has(id))) { status = 'invalid_output'; reason = 'G8N_LLM_UNKNOWN_TAXONOMY_ID'; }\n  plans.push({ offer_key: row.offer_key, status, reason, fallback: status !== 'accepted_optional', api_call_count: 1, cache_write: status === 'accepted_optional', output_json: status === 'accepted_optional' ? JSON.stringify(out) : null });\n}\nreturn [{ json: { ...input, optional_llm_plans: plans, remaining_budget: remaining } }];"
+      },
+      "id": "validate-optional-output",
+      "name": "Validate — Optional output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual optional LLM simulation": {
+      "main": [[{ "node": "Load — Optional LLM context", "type": "main", "index": 0 }]]
+    },
+    "Load — Optional LLM context": {
+      "main": [[{ "node": "Validate — Optional output", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-042-wf-51-optional-llm-classification",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive optional LLM contract. Disabled by default; no LLM/API/Data Table operation/test is executed."
+  },
+  "tags": ["G8N", "LLM optional", "disabled", "classification", "local"]
+}

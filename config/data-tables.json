@@ -1168,6 +1168,75 @@
       }
     },
     {
+      "name": "job_llm_classification_cache",
+      "upsert_key": "cache_key",
+      "columns": {
+        "cache_key": {
+          "type": "string",
+          "required": true
+        },
+        "offer_key": {
+          "type": "string",
+          "required": true
+        },
+        "taxonomy_version": {
+          "type": "string",
+          "required": true
+        },
+        "prompt_version": {
+          "type": "string",
+          "required": true
+        },
+        "model_version": {
+          "type": "string|null",
+          "required": false
+        },
+        "status": {
+          "type": "string",
+          "required": true,
+          "values": [
+            "accepted_optional",
+            "invalid_output",
+            "provider_error",
+            "budget_exceeded",
+            "skipped_disabled"
+          ]
+        },
+        "output_json": {
+          "type": "string|null",
+          "required": false
+        },
+        "token_count": {
+          "type": "integer|null",
+          "required": false
+        },
+        "cost_units": {
+          "type": "number|null",
+          "required": false
+        },
+        "latency_ms": {
+          "type": "integer|null",
+          "required": false
+        },
+        "error_code": {
+          "type": "string|null",
+          "required": false
+        },
+        "created_at": {
+          "type": "datetime_utc",
+          "required": true
+        },
+        "expires_at": {
+          "type": "datetime_utc",
+          "required": true
+        },
+        "updated_at": {
+          "type": "datetime_utc",
+          "required": true
+        }
+      }
+    },
+    {
       "name": "company_signals",
       "upsert_key": "signal_key",
       "columns": {

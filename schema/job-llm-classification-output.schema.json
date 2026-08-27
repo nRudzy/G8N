@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "g8n.job-llm-classification-output.schema.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["family_ids", "training_need_ids", "confidence", "reasons", "abstain"],
+  "properties": {
+    "family_ids": { "type": "array", "items": { "type": "string" }, "maxItems": 3 },
+    "training_need_ids": { "type": "array", "items": { "type": "string" }, "maxItems": 5 },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "reasons": { "type": "array", "items": { "type": "string" }, "minItems": 1, "maxItems": 5 },
+    "abstain": { "type": "boolean" }
+  }
+}

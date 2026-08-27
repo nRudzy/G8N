@@ -1,0 +1,14 @@
+{
+  "fixture_version": "g8n.job-llm-classification.expected.v1",
+  "llm_classifier_version": "g8n.job-llm-classifier.contract.v1",
+  "source": "synthetic",
+  "cases": [
+    {"name":"llm_disabled","input":{"enabled":false,"baseline_status":"ambiguous"},"expected":{"status":"skipped_disabled","fallback":true,"api_call_count":0}},
+    {"name":"already_classified","input":{"enabled":true,"baseline_status":"classified"},"expected":{"status":"skipped_not_eligible","api_call_count":0}},
+    {"name":"invalid_json","input":{"enabled":true,"provider_output":"not json"},"expected":{"status":"invalid_output","fallback":true}},
+    {"name":"invented_family","input":{"enabled":true,"family_ids":["invented"]},"expected":{"status":"invalid_output","fallback":true}},
+    {"name":"timeout_429","input":{"enabled":true,"provider_error":"429"},"expected":{"status":"provider_error","fallback":true}},
+    {"name":"budget_exceeded","input":{"enabled":true,"budget_remaining":0},"expected":{"status":"budget_exceeded","fallback":true}},
+    {"name":"valid_optional_output","input":{"enabled":true,"family_ids":["logistics_transport"]},"expected":{"status":"accepted_optional","cache_write":true}}
+  ]
+}
