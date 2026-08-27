@@ -1,0 +1,25 @@
+{
+  "derived_signal_version": "g8n.company-derived-signals.v1",
+  "source_signal_version": "g8n.company-signals.v1",
+  "ratio_cap": 5,
+  "cold_start": {
+    "baseline_zero_ratio": null,
+    "baseline_zero_label": "cold_start",
+    "baseline_zero_confidence_cap": 0.6
+  },
+  "formulas": {
+    "acceleration_index": "min(ratio_cap, active_offer_count_24h / max(active_offer_count_7d / 7, 1)) unless cold start",
+    "diversity_index": "job_family_count_30d / max(active_offer_count_30d, 1)",
+    "multisite_index": "site_count_30d when establishments are proven, else 0",
+    "recurrence_rate": "republication_count_30d / max(active_offer_count_30d + republication_count_30d, 1)",
+    "campaign_pattern": "campaign if acceleration high and recurrence low; continuous if recurrence high and acceleration stable"
+  },
+  "thresholds": {
+    "acceleration_high": 2,
+    "diversity_high": 0.4,
+    "multisite_min_sites": 2,
+    "recurrence_high": 0.35
+  },
+  "persistence_table": "company_derived_signals",
+  "score_separation": true
+}

@@ -1414,6 +1414,56 @@
       }
     },
     {
+      "name": "company_derived_signals",
+      "upsert_key": "derived_signal_key",
+      "columns": {
+        "derived_signal_key": {
+          "type": "string",
+          "required": true
+        },
+        "company_key": {
+          "type": "string",
+          "required": true
+        },
+        "derived_signal_version": {
+          "type": "string",
+          "required": true
+        },
+        "acceleration_index": {
+          "type": "number|null",
+          "required": false
+        },
+        "diversity_index": {
+          "type": "number",
+          "required": true
+        },
+        "multisite_index": {
+          "type": "integer",
+          "required": true
+        },
+        "recurrence_rate": {
+          "type": "number",
+          "required": true
+        },
+        "labels_json": {
+          "type": "string",
+          "required": true
+        },
+        "confidence": {
+          "type": "number",
+          "required": true
+        },
+        "source_signal_keys_json": {
+          "type": "string",
+          "required": true
+        },
+        "computed_at": {
+          "type": "datetime_utc",
+          "required": true
+        }
+      }
+    },
+    {
       "name": "lead_scores",
       "upsert_key": "score_key",
       "columns": {

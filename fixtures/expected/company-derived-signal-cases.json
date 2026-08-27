@@ -1,0 +1,13 @@
+{
+  "fixture_version": "g8n.company-derived-signals.expected.v1",
+  "derived_signal_version": "g8n.company-derived-signals.v1",
+  "source": "synthetic",
+  "cases": [
+    {"name":"clear_acceleration","input":{"active_24h":6,"active_7d":14,"active_30d":30},"expected":{"acceleration_label":"high","capped":false}},
+    {"name":"stable_pace","input":{"active_24h":2,"active_7d":14,"active_30d":60},"expected":{"acceleration_label":"stable"}},
+    {"name":"cold_start","input":{"active_24h":2,"active_7d":0,"active_30d":0},"expected":{"acceleration_label":"cold_start","confidence_max":0.6}},
+    {"name":"massive_republication","input":{"active_30d":4,"republication_30d":8},"expected":{"recurrence_label":"high","unique_volume_not_inflated":true}},
+    {"name":"three_establishments","input":{"site_count_30d":3,"proven_establishments":true},"expected":{"multisite_label":"multi_site"}},
+    {"name":"title_variants_same_family","input":{"active_30d":5,"job_family_count_30d":1},"expected":{"diversity_label":"focused"}}
+  ]
+}
