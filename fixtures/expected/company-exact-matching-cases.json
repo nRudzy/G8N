@@ -1,0 +1,127 @@
+{
+  "fixture_version": "g8n.company-exact-matching.expected.v1",
+  "exact_match_version": "g8n.company-exact-matching.v1",
+  "source": "synthetic",
+  "cases": [
+    {
+      "name": "explicit_siret_open_establishment",
+      "offer": {
+        "offer_key": "france_travail:FT-EXACT-001",
+        "declared_company_name": "Atelier Rhône Services",
+        "declared_siret": "12345678900015",
+        "city": "Lyon",
+        "postal_code": "69003"
+      },
+      "sirene_candidates": [
+        {
+          "siren": "123456789",
+          "siret": "12345678900015",
+          "legal_name": "ATELIER RHONE SERVICES",
+          "establishment_status": "open",
+          "postal_code": "69003",
+          "city": "Lyon"
+        }
+      ],
+      "expected": {
+        "match_status": "matched",
+        "match_method": "explicit_siret",
+        "score": 95,
+        "company_key": "siren:123456789",
+        "establishment_key": "siret:12345678900015"
+      }
+    },
+    {
+      "name": "exact_name_postal_code_single_candidate",
+      "offer": {
+        "offer_key": "france_travail:FT-EXACT-002",
+        "declared_company_name": "Boulangerie Étoile SAS",
+        "city": "Lyon",
+        "postal_code": "69003"
+      },
+      "sirene_candidates": [
+        {
+          "siren": "223456789",
+          "siret": "22345678900021",
+          "legal_name": "BOULANGERIE ETOILE",
+          "establishment_status": "open",
+          "postal_code": "69003",
+          "city": "Lyon"
+        }
+      ],
+      "expected": {
+        "match_status": "matched",
+        "match_method": "exact_name_postal_code",
+        "score": 87
+      }
+    },
+    {
+      "name": "trade_name_open_establishment",
+      "offer": {
+        "offer_key": "france_travail:FT-EXACT-003",
+        "declared_company_name": "Café du Centre",
+        "city": "Nantes",
+        "postal_code": "44000"
+      },
+      "sirene_candidates": [
+        {
+          "siren": "323456789",
+          "siret": "32345678900037",
+          "legal_name": "CDC RESTAURATION",
+          "trade_name": "CAFE DU CENTRE",
+          "establishment_status": "open",
+          "postal_code": "44000",
+          "city": "Nantes"
+        }
+      ],
+      "expected": {
+        "match_status": "matched",
+        "match_method": "trade_name_establishment",
+        "score": 82
+      }
+    },
+    {
+      "name": "exact_name_closed_establishment",
+      "offer": {
+        "offer_key": "france_travail:FT-EXACT-004",
+        "declared_company_name": "Garage Central",
+        "city": "Bordeaux",
+        "postal_code": "33000"
+      },
+      "sirene_candidates": [
+        {
+          "siren": "423456789",
+          "siret": "42345678900043",
+          "legal_name": "GARAGE CENTRAL",
+          "establishment_status": "closed",
+          "postal_code": "33000",
+          "city": "Bordeaux"
+        }
+      ],
+      "expected": {
+        "match_status": "ambiguous",
+        "match_method": "exact_name_closed_establishment",
+        "score": 64,
+        "reason_code": "G8N_MATCH_CLOSED_ESTABLISHMENT_REVIEW"
+      }
+    },
+    {
+      "name": "exact_name_two_communes",
+      "offer": {
+        "offer_key": "france_travail:FT-EXACT-005",
+        "declared_company_name": "Garage Central",
+        "city": "Gironde",
+        "postal_code": null
+      },
+      "sirene_candidates": [
+        { "siren": "523456789", "siret": "52345678900057", "legal_name": "GARAGE CENTRAL", "establishment_status": "open", "postal_code": "33700", "city": "Mérignac" },
+        { "siren": "623456789", "siret": "62345678900063", "legal_name": "GARAGE CENTRAL", "establishment_status": "open", "postal_code": "33000", "city": "Bordeaux" }
+      ],
+      "expected": {
+        "match_status": "ambiguous",
+        "match_method": "multiple_exact_candidates",
+        "score_max": 84,
+        "reason_code": "G8N_MATCH_HOMONYM_AMBIGUOUS"
+      }
+    }
+  ]
+}

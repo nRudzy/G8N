@@ -1,0 +1,108 @@
+{
+  "name": "WF-32 — Exact company establishment matching",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual exact matching simulation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { exact_match_version: 'g8n.company-exact-matching.v1', match_rule_version: 'g8n.company-matching.v1', offers: [], sirene_results_by_offer_key: {}, next_step: 'Wire job_offers and WF-31 normalized SIRENE responses locally. This skeleton does not call APIs or write Data Tables.' } }];"
+      },
+      "id": "load-exact-match-context",
+      "name": "Load — Exact match context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst normalize = (value) => String(value || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('fr-FR').replace(/\\b(sa|sas|sasu|sarl|eurl|scop|association|ei|eirl)\\b/g, ' ').replace(/[^a-z0-9 ]+/g, ' ').replace(/\\s+/g, ' ').trim();\nconst luhn = (digits) => { let sum = 0; let alt = false; for (let i = digits.length - 1; i >= 0; i--) { let n = Number(digits[i]); if (alt) { n *= 2; if (n > 9) n -= 9; } sum += n; alt = !alt; } return sum % 10 === 0; };\nconst sameLocation = (offer, candidate) => (offer.postal_code && candidate.postal_code && String(offer.postal_code) === String(candidate.postal_code)) || (normalize(offer.city) && normalize(offer.city) === normalize(candidate.city));\nconst candidateNameMatch = (offer, candidate) => normalize(offer.declared_company_name || offer.company_name) === normalize(candidate.legal_name);\nconst tradeNameMatch = (offer, candidate) => candidate.trade_name && normalize(offer.declared_company_name || offer.company_name) === normalize(candidate.trade_name);\nconst plans = [];\nfor (const offer of input.offers) {\n  const sirene = input.sirene_results_by_offer_key[offer.offer_key] || { candidates: [], status: 'zero_result' };\n  const candidates = sirene.candidates || [];\n  const declaredDigits = String(offer.declared_siret || '').replace(/\\D/g, '');\n  const hasValidSiret = declaredDigits.length === 14 && luhn(declaredDigits);\n  let method = 'unresolved'; let status = 'unresolved'; let score = 0; let reason = 'G8N_MATCH_LOCATION_ONLY_REJECTED'; let candidate = null;\n  if (hasValidSiret && candidates.length === 1 && candidates[0].siret === declaredDigits) {\n    candidate = candidates[0];\n    if (candidate.establishment_status === 'open') { method = 'explicit_siret'; status = 'matched'; score = 95; reason = 'G8N_MATCH_EXPLICIT_SIRET'; }\n    else { method = 'exact_name_closed_establishment'; status = 'ambiguous'; score = 64; reason = 'G8N_MATCH_CLOSED_ESTABLISHMENT_REVIEW'; }\n  } else {\n    const exactNameCandidates = candidates.filter((c) => candidateNameMatch(offer, c));\n    const exactLocationCandidates = exactNameCandidates.filter((c) => sameLocation(offer, c));\n    const trade = candidates.filter((c) => tradeNameMatch(offer, c) && sameLocation(offer, c));\n    if (exactLocationCandidates.length === 1) {\n      candidate = exactLocationCandidates[0];\n      if (candidate.establishment_status === 'open') { method = offer.postal_code && String(offer.postal_code) === String(candidate.postal_code) ? 'exact_name_postal_code' : 'exact_name_city'; status = 'matched'; score = method === 'exact_name_postal_code' ? 87 : 85; reason = 'G8N_MATCH_EXACT_NAME_LOCATION'; }\n      else { method = 'exact_name_closed_establishment'; status = 'ambiguous'; score = 64; reason = 'G8N_MATCH_CLOSED_ESTABLISHMENT_REVIEW'; }\n    }\n    else if (exactNameCandidates.length > 1) { method = 'multiple_exact_candidates'; status = 'ambiguous'; score = 59; reason = 'G8N_MATCH_HOMONYM_AMBIGUOUS'; }\n    else if (trade.length === 1 && trade[0].establishment_status === 'open') { candidate = trade[0]; method = 'trade_name_establishment'; status = 'matched'; score = 82; reason = 'G8N_MATCH_TRADE_NAME_LOCATION'; }\n    else if (trade.length > 1) { method = 'multiple_exact_candidates'; status = 'ambiguous'; score = 59; reason = 'G8N_MATCH_HOMONYM_AMBIGUOUS'; }\n    else if (exactNameCandidates.length === 1) { candidate = exactNameCandidates[0]; method = 'exact_name_conflicting_location'; status = 'ambiguous'; score = 64; reason = 'G8N_MATCH_TOLERANT_AMBIGUOUS'; }\n  }\n  const companyKey = candidate?.siren ? `siren:${candidate.siren}` : null;\n  const establishmentKey = candidate?.siret ? `siret:${candidate.siret}` : null;\n  plans.push({ offer_key: offer.offer_key, match_key: `${offer.offer_key}:${input.match_rule_version}:${method}`, match_method: method, match_status: status, confidence: score, reason, match_rule_version: input.match_rule_version, company_key: companyKey, establishment_key: establishmentKey, candidate_siren: candidate?.siren || null, candidate_siret: candidate?.siret || null, evidence_json: JSON.stringify({ declared_company_name: offer.declared_company_name || offer.company_name || null, normalized_declared_company_name: normalize(offer.declared_company_name || offer.company_name), declared_city: offer.city || null, declared_postal_code: offer.postal_code || null, candidate, sirene_status: sirene.status }) });\n}\nreturn [{ json: { ...input, company_match_upsert_plans: plans, next_step: 'Review plans, then wire transactional Data Table upserts locally.' } }];"
+      },
+      "id": "compute-exact-matches",
+      "name": "Compute — Exact matches",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst companyUpserts = [];\nconst establishmentUpserts = [];\nfor (const plan of input.company_match_upsert_plans || []) {\n  if (plan.company_key) companyUpserts.push({ company_key: plan.company_key, siren: plan.candidate_siren, identity_confidence: plan.confidence, updated_at: new Date().toISOString() });\n  if (plan.establishment_key) establishmentUpserts.push({ establishment_key: plan.establishment_key, company_key: plan.company_key, siret: plan.candidate_siret, siren: plan.candidate_siren, identity_confidence: plan.confidence, updated_at: new Date().toISOString() });\n}\nreturn [{ json: { ...input, transactional_write_order: ['companies', 'establishments', 'company_matches', 'job_offers'], company_upserts: companyUpserts, establishment_upserts: establishmentUpserts } }];"
+      },
+      "id": "prepare-upserts",
+      "name": "Prepare — Transactional upsert plans",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual exact matching simulation": {
+      "main": [
+        [
+          {
+            "node": "Load — Exact match context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load — Exact match context": {
+      "main": [
+        [
+          {
+            "node": "Compute — Exact matches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute — Exact matches": {
+      "main": [
+        [
+          {
+            "node": "Prepare — Transactional upsert plans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-032-wf-32-exact-company-matching",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive exact matching skeleton. No SIRENE call, Data Table operation, transaction or test is executed by this export."
+  },
+  "tags": [
+    "G8N",
+    "SIRENE",
+    "company matching",
+    "SIRET",
+    "Data Tables"
+  ]
+}

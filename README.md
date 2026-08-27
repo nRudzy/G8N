@@ -72,6 +72,7 @@ See [docs/france-travail-incremental-schedule.md](docs/france-travail-incrementa
 See [docs/france-travail-vertical-slice-csv.md](docs/france-travail-vertical-slice-csv.md) for the local France Travail to CSV vertical slice.
 See [docs/company-identity-matching.md](docs/company-identity-matching.md) for SIREN/SIRET resolution, evidence scoring and ambiguity rules.
 See [docs/sirene-lookup-cache.md](docs/sirene-lookup-cache.md) for the local SIRENE lookup contract, cache policy and error handling.
+See [docs/company-exact-matching.md](docs/company-exact-matching.md) for deterministic SIRET/name/location matching and persistence.
 
 ## Version
 

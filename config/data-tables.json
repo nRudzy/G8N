@@ -171,6 +171,24 @@
           "type": "string|null",
           "required": false
         },
+        "establishment_key": {
+          "type": "string|null",
+          "required": false
+        },
+        "company_match_key": {
+          "type": "string|null",
+          "required": false
+        },
+        "identity_match_status": {
+          "type": "string|null",
+          "required": false,
+          "values": [
+            "matched",
+            "ambiguous",
+            "unresolved",
+            "error"
+          ]
+        },
         "company_name": {
           "type": "string|null",
           "required": false
@@ -329,6 +347,80 @@
         },
         "identity_confidence": {
           "type": "number",
+          "required": true
+        },
+        "updated_at": {
+          "type": "datetime_utc",
+          "required": true
+        },
+        "match_rule_version": {
+          "type": "string|null",
+          "required": false
+        }
+      }
+    },
+    {
+      "name": "establishments",
+      "upsert_key": "establishment_key",
+      "columns": {
+        "establishment_key": {
+          "type": "string",
+          "required": true
+        },
+        "company_key": {
+          "type": "string",
+          "required": true
+        },
+        "siren": {
+          "type": "string",
+          "required": true
+        },
+        "siret": {
+          "type": "string",
+          "required": true
+        },
+        "legal_name": {
+          "type": "string|null",
+          "required": false
+        },
+        "trade_name": {
+          "type": "string|null",
+          "required": false
+        },
+        "naf_code": {
+          "type": "string|null",
+          "required": false
+        },
+        "employee_band": {
+          "type": "string|null",
+          "required": false
+        },
+        "administrative_status": {
+          "type": "string|null",
+          "required": false
+        },
+        "establishment_status": {
+          "type": "string|null",
+          "required": false
+        },
+        "address_line": {
+          "type": "string|null",
+          "required": false
+        },
+        "postal_code": {
+          "type": "string|null",
+          "required": false
+        },
+        "city": {
+          "type": "string|null",
+          "required": false
+        },
+        "identity_confidence": {
+          "type": "number",
+          "required": true
+        },
+        "match_rule_version": {
+          "type": "string",
           "required": true
         },
         "updated_at": {

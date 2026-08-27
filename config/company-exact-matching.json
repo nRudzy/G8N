@@ -1,0 +1,59 @@
+{
+  "exact_match_version": "g8n.company-exact-matching.v1",
+  "uses_match_rule_version": "g8n.company-matching.v1",
+  "input_tables": ["job_offers", "sirene_cache"],
+  "output_tables": ["companies", "establishments", "company_matches", "job_offers"],
+  "methods": {
+    "explicit_siret": {
+      "score": 95,
+      "required": ["valid_siret_checksum", "sirene_single_result", "establishment_open_or_reviewed"],
+      "status_when_open": "matched",
+      "status_when_closed": "ambiguous",
+      "reason_code": "G8N_MATCH_EXPLICIT_SIRET"
+    },
+    "exact_name_postal_code": {
+      "score": 87,
+      "required": ["exact_normalized_name", "exact_postal_code", "single_candidate", "open_establishment"],
+      "status": "matched",
+      "reason_code": "G8N_MATCH_EXACT_NAME_LOCATION"
+    },
+    "exact_name_city": {
+      "score": 85,
+      "required": ["exact_normalized_name", "exact_city", "single_candidate", "open_establishment"],
+      "status": "matched",
+      "reason_code": "G8N_MATCH_EXACT_NAME_LOCATION"
+    },
+    "trade_name_establishment": {
+      "score": 82,
+      "required": ["trade_name_match", "exact_location", "single_candidate", "open_establishment"],
+      "status": "matched",
+      "reason_code": "G8N_MATCH_TRADE_NAME_LOCATION"
+    },
+    "exact_name_conflicting_location": {
+      "score": 64,
+      "required": ["exact_normalized_name", "location_conflict"],
+      "status": "ambiguous",
+      "reason_code": "G8N_MATCH_TOLERANT_AMBIGUOUS"
+    }
+  },
+  "validation": {
+    "siren_length": 9,
+    "siret_length": 14,
+    "use_luhn_checksum": true,
+    "closed_establishment_auto_match": false,
+    "multiple_candidate_status": "ambiguous",
+    "transactional_write_order": ["companies", "establishments", "company_matches", "job_offers"]
+  },
+  "normalization": {
+    "remove_accents": true,
+    "fold_case": true,
+    "strip_legal_forms": true,
+    "collapse_whitespace": true,
+    "keep_original": true
+  },
+  "privacy": {
+    "synthetic_examples_only": true,
+    "no_external_call_in_workflow_export": true,
+    "no_secret": true
+  }
+}
