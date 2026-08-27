@@ -1,0 +1,37 @@
+{
+  "fixture_version": "g8n.company-match-review.expected.v1",
+  "review_workflow_version": "g8n.company-match-review.v1",
+  "source": "synthetic",
+  "cases": [
+    {
+      "name": "accept_top_candidate",
+      "input": { "review_key": "review:001", "decision": "accept", "selected_siret": "" },
+      "expected": { "status": "accepted", "selected_rank": 1, "history_created": true }
+    },
+    {
+      "name": "select_second_candidate",
+      "input": { "review_key": "review:002", "decision": "select_siret", "selected_siret": "62345678900063" },
+      "expected": { "status": "accepted", "selected_siret": "62345678900063", "history_created": true }
+    },
+    {
+      "name": "reject_total",
+      "input": { "review_key": "review:003", "decision": "reject", "review_note": "No legal proof" },
+      "expected": { "status": "accepted", "match_status": "unresolved" }
+    },
+    {
+      "name": "invalid_siret",
+      "input": { "review_key": "review:004", "decision": "select_siret", "selected_siret": "bad" },
+      "expected": { "status": "rejected", "error_code": "G8N_REVIEW_INVALID_SIRET" }
+    },
+    {
+      "name": "same_file_reimport",
+      "input": { "review_key": "review:001", "decision": "accept", "selected_siret": "" },
+      "expected": { "status": "duplicate_ignored", "history_not_duplicated": true }
+    },
+    {
+      "name": "decision_modified",
+      "input": { "review_key": "review:002", "decision": "reject", "review_note": "Correction after review" },
+      "expected": { "status": "accepted", "previous_decision_kept": true, "new_decision_current": true }
+    }
+  ]
+}

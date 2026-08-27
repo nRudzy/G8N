@@ -1,0 +1,66 @@
+{
+  "name": "WF-35 — Review ambiguous company matches",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual review simulation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { review_workflow_version: 'g8n.company-match-review.v1', mode: 'export', review_rows: [], imported_decisions: [], previous_decision_keys: [], now_utc: new Date().toISOString(), next_step: 'Wire company_match_reviews read, local CSV write/read and Data Table upserts locally.' } }];"
+      },
+      "id": "load-review-context",
+      "name": "Load — Review context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst columns = ['review_key','offer_key','declared_company_name','declared_city','reason','top_margin','candidate_rank','candidate_siret','candidate_siren','candidate_name','candidate_city','total_score','score_dimensions_json','decision','selected_siret','reviewer','review_note'];\nconst export_rows = (input.review_rows || []).flatMap((row) => (row.candidates || []).map((c, i) => ({ review_key: row.review_key, offer_key: row.offer_key, declared_company_name: row.declared_company_name || '', declared_city: row.declared_city || '', reason: row.reason, top_margin: row.top_margin, candidate_rank: i + 1, candidate_siret: c.siret || '', candidate_siren: c.siren || '', candidate_name: c.legal_name || c.trade_name || '', candidate_city: c.city || '', total_score: c.total_score || '', score_dimensions_json: JSON.stringify(c.score_dimensions || {}), decision: '', selected_siret: '', reviewer: '', review_note: '' })));\nreturn [{ json: { ...input, csv_columns: columns, export_rows } }];"
+      },
+      "id": "prepare-review-export",
+      "name": "Prepare — Review CSV export",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst allowed = new Set(['accept','reject','select_siret','ignore']);\nconst candidateSirets = new Map((input.review_rows || []).map((row) => [row.review_key, new Set((row.candidates || []).map((c) => c.siret).filter(Boolean))]));\nconst accepted = []; const rejected = [];\nfor (const row of input.imported_decisions || []) {\n  const decision = String(row.decision || '').trim();\n  const selected = String(row.selected_siret || '').replace(/\\D/g, '');\n  const key = `${row.review_key}:${decision}:${selected}:${row.reviewer || ''}`;\n  let error = null;\n  if (!row.review_key || !allowed.has(decision)) error = 'G8N_REVIEW_INVALID_DECISION';\n  else if (input.previous_decision_keys.includes(key)) error = 'G8N_REVIEW_DUPLICATE_DECISION';\n  else if (decision === 'select_siret' && selected.length !== 14) error = 'G8N_REVIEW_INVALID_SIRET';\n  else if (decision === 'select_siret' && !candidateSirets.get(row.review_key)?.has(selected) && !row.review_note) error = 'G8N_REVIEW_OVERRIDE_NOTE_REQUIRED';\n  if (error === 'G8N_REVIEW_DUPLICATE_DECISION') rejected.push({ ...row, status: 'duplicate_ignored', error_code: error });\n  else if (error) rejected.push({ ...row, status: 'rejected', error_code: error });\n  else accepted.push({ ...row, status: 'accepted', decision_key: key, reviewed_at: input.now_utc, invalidate_downstream: ['company_signals','lead_scores','exports'] });\n}\nreturn [{ json: { ...input, import_report: { accepted_count: accepted.length, rejected_count: rejected.length, accepted, rejected } } }];"
+      },
+      "id": "validate-review-import",
+      "name": "Validate — Review import",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual review simulation": {
+      "main": [[{ "node": "Load — Review context", "type": "main", "index": 0 }]]
+    },
+    "Load — Review context": {
+      "main": [[{ "node": "Prepare — Review CSV export", "type": "main", "index": 0 }]]
+    },
+    "Prepare — Review CSV export": {
+      "main": [[{ "node": "Validate — Review import", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-035-wf-35-review-company-matches",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive review import/export skeleton. No file, Data Table operation or test is executed by this export."
+  },
+  "tags": ["G8N", "review", "CSV", "company matching", "Data Tables"]
+}

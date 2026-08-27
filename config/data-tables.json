@@ -614,6 +614,90 @@
         "updated_at": {
           "type": "datetime_utc",
           "required": true
+        },
+        "current_decision_key": {
+          "type": "string|null",
+          "required": false
+        },
+        "reviewer": {
+          "type": "string|null",
+          "required": false
+        },
+        "review_note": {
+          "type": "string|null",
+          "required": false
+        }
+      }
+    },
+    {
+      "name": "company_match_review_history",
+      "upsert_key": "decision_key",
+      "columns": {
+        "decision_key": {
+          "type": "string",
+          "required": true
+        },
+        "review_key": {
+          "type": "string",
+          "required": true
+        },
+        "offer_key": {
+          "type": "string",
+          "required": true
+        },
+        "previous_status": {
+          "type": "string|null",
+          "required": false
+        },
+        "new_status": {
+          "type": "string",
+          "required": true
+        },
+        "decision": {
+          "type": "string",
+          "required": true,
+          "values": [
+            "accept",
+            "reject",
+            "select_siret",
+            "ignore"
+          ]
+        },
+        "selected_siret": {
+          "type": "string|null",
+          "required": false
+        },
+        "selected_siren": {
+          "type": "string|null",
+          "required": false
+        },
+        "reviewer": {
+          "type": "string",
+          "required": true
+        },
+        "review_note": {
+          "type": "string|null",
+          "required": false
+        },
+        "old_decision_json": {
+          "type": "string|null",
+          "required": false
+        },
+        "new_decision_json": {
+          "type": "string",
+          "required": true
+        },
+        "invalidated_entities_json": {
+          "type": "string",
+          "required": true
+        },
+        "reviewed_at": {
+          "type": "datetime_utc",
+          "required": true
+        },
+        "updated_at": {
+          "type": "datetime_utc",
+          "required": true
         }
       }
     },

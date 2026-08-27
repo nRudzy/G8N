@@ -1,0 +1,51 @@
+{
+  "review_workflow_version": "g8n.company-match-review.v1",
+  "export": {
+    "directory": "exports/review",
+    "file_name_template": "company-match-review-{generated_at_yyyymmddhhmmss}.csv",
+    "encoding": "utf-8-sig",
+    "delimiter": ",",
+    "quote_all_fields": true,
+    "columns": [
+      "review_key",
+      "offer_key",
+      "declared_company_name",
+      "declared_city",
+      "reason",
+      "top_margin",
+      "candidate_rank",
+      "candidate_siret",
+      "candidate_siren",
+      "candidate_name",
+      "candidate_city",
+      "total_score",
+      "score_dimensions_json",
+      "decision",
+      "selected_siret",
+      "reviewer",
+      "review_note"
+    ]
+  },
+  "allowed_decisions": ["accept", "reject", "select_siret", "ignore"],
+  "validation": {
+    "stable_id_required": true,
+    "line_number_is_not_identity": true,
+    "selected_siret_must_be_candidate_unless_override": true,
+    "override_requires_review_note": true,
+    "malformed_rows_do_not_block_file": true,
+    "idempotency_key": "{review_key}:{decision}:{selected_siret}:{reviewer}"
+  },
+  "effects": {
+    "accept": "select top ranked candidate",
+    "select_siret": "select one candidate SIRET from exported candidates",
+    "reject": "mark unresolved and keep evidence",
+    "ignore": "leave current ambiguity unchanged",
+    "invalidate_downstream_for": ["company_signals", "lead_scores", "exports"]
+  },
+  "privacy": {
+    "no_sql_required_for_user": true,
+    "no_user_accounts": true,
+    "synthetic_examples_only": true,
+    "no_secret": true
+  }
+}
