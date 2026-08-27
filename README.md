@@ -60,6 +60,7 @@ Structured business records belong in n8n Data Tables. Raw payloads and exports 
 See [docs/local-stack.md](docs/local-stack.md) for backup, reset and the local validation procedure.
 See [docs/security-and-retention.md](docs/security-and-retention.md) before creating credentials, exporting a workflow or sharing diagnostic output.
 See [docs/adr/README.md](docs/adr/README.md) for Architecture Decision Records and the ADR template.
+See [docs/workflow-conventions.md](docs/workflow-conventions.md) for workflow naming, run envelopes, error contracts and the n8n review checklist.
 
 ## Version
 

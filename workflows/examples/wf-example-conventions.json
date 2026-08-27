@@ -1,0 +1,246 @@
+{
+  "name": "WF-EXAMPLE — Convention handoff",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "0b47d4a2-f21e-4d8a-bc95-20f2c91512d7",
+      "name": "Trigger — Manual convention sample",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "36e9de8c-b665-4e9c-b68d-3c2117463db4",
+              "name": "run_id",
+              "value": "run_2026-08-27T12-00-00Z_001",
+              "type": "string"
+            },
+            {
+              "id": "70d59ab0-310d-455c-9cf2-caa5d5ae8168",
+              "name": "correlation_id",
+              "value": "corr_2026-08-27_france_scope_demo",
+              "type": "string"
+            },
+            {
+              "id": "ff4091be-e605-4a15-a3eb-0d672ff8c85f",
+              "name": "schema_version",
+              "value": "g8n.workflow-envelope.v1",
+              "type": "string"
+            },
+            {
+              "id": "eb42716f-409a-4f32-8b8c-651d6fdffbd6",
+              "name": "payload.company.siren",
+              "value": "000000000",
+              "type": "string"
+            },
+            {
+              "id": "ed70bc3a-ffcc-4a98-86bd-0063999c2e59",
+              "name": "payload.company.name",
+              "value": "Synthetic France Example SAS",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5e89e913-8df6-41f2-8ad1-e4b7c025d751",
+      "name": "Normalize — Input envelope",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "55df43ec-3f68-48ea-9f4f-26514508f5cf",
+              "leftValue": "={{ $json.payload.company.siren }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "731d5a31-b1d8-4b62-9353-1d0a36f51e54",
+      "name": "If — Payload is usable",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "95ef7494-dd55-469e-8ea9-ae9b751f5504",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "59f1f349-f5b3-411a-aef9-02f198a729f5",
+              "name": "payload.accepted",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "7a155d0a-bcef-474c-a373-aae20e7da504",
+              "name": "payload.next_workflow",
+              "value": "WF-XX — Downstream workflow",
+              "type": "string"
+            },
+            {
+              "id": "1501877e-c5a6-4d10-9544-b78f10b8f875",
+              "name": "errors",
+              "value": "[]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b806600a-450c-4cdc-876a-e9ed04be3b06",
+      "name": "Return — Success envelope",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        120,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "822d0334-d5c2-485b-9f06-f9892ea7f792",
+              "name": "status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "18f958fb-2f03-4474-8ca0-0ff9f4a620db",
+              "name": "payload.recoverable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "cd39ace9-bd9c-4730-9ba1-37da16570ff7",
+              "name": "errors.0.code",
+              "value": "G8N_VALIDATION_MISSING_FIELD",
+              "type": "string"
+            },
+            {
+              "id": "cfbfb943-774e-4de6-9707-e7998b31ea49",
+              "name": "errors.0.category",
+              "value": "validation",
+              "type": "string"
+            },
+            {
+              "id": "4dcf81ac-e621-4b60-b2d5-f3974bd82801",
+              "name": "errors.0.masked",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4b38332c-6861-4774-bb54-821828e07d89",
+      "name": "Return — Error envelope",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        120,
+        120
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Trigger — Manual convention sample": {
+      "main": [
+        [
+          {
+            "node": "Normalize — Input envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize — Input envelope": {
+      "main": [
+        [
+          {
+            "node": "If — Payload is usable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If — Payload is usable": {
+      "main": [
+        [
+          {
+            "node": "Return — Success envelope",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return — Error envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  },
+  "versionId": "g8n-example-conventions-v1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "local-g8n-placeholder"
+  },
+  "tags": [
+    {
+      "name": "G8N"
+    },
+    {
+      "name": "conventions"
+    }
+  ]
+}

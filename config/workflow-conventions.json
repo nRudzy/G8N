@@ -1,0 +1,78 @@
+{
+  "schema_version": "g8n.workflow-conventions.v1",
+  "envelope_schema_version": "g8n.workflow-envelope.v1",
+  "workflow_naming": {
+    "workflow_pattern": "WF-XX — Intent in sentence case",
+    "workflow_file_pattern": "workflows/wf-XX-short-name.json",
+    "example_file_pattern": "workflows/examples/wf-example-short-name.json",
+    "credential_pattern": "G8N — Provider — Scope — Environment",
+    "environment_variable_pattern": "G8N_<DOMAIN>_<NAME>",
+    "execution_label_pattern": "WF-XX:${run_id}:${short_status}"
+  },
+  "node_naming": {
+    "trigger": "Trigger — Intent",
+    "normalization": "Normalize — Input envelope",
+    "decision": "If — Business intention",
+    "success": "Return — Success envelope",
+    "error": "Return — Error envelope",
+    "rule": "Use intention-revealing names instead of node-type-only names."
+  },
+  "required_envelope_fields": [
+    "run_id",
+    "correlation_id",
+    "schema_version",
+    "source",
+    "timestamps",
+    "payload",
+    "metadata"
+  ],
+  "standard_statuses": [
+    "success",
+    "error"
+  ],
+  "error_categories": [
+    "validation",
+    "timeout",
+    "credential",
+    "upstream",
+    "rate_limit",
+    "configuration",
+    "unexpected"
+  ],
+  "sensitive_key_patterns": [
+    "authorization",
+    "access_token",
+    "refresh_token",
+    "client_secret",
+    "password",
+    "cookie",
+    "api_key"
+  ],
+  "chaining": {
+    "propagate_unchanged": [
+      "run_id",
+      "correlation_id",
+      "schema_version"
+    ],
+    "retry_rule": "Increment metadata.retry_count only when an actual retry is attempted.",
+    "source_rule": "Downstream workflows replace source with their own workflow and node details."
+  },
+  "activation": {
+    "exported_workflows_default_active": false,
+    "activation_rule": "Activate only in the local n8n UI after credentials, timeouts and error branches have been reviewed.",
+    "versioning_rule": "Use the workflow name for human workflow versions and schema_version for envelope compatibility."
+  },
+  "review_checklist": [
+    "Workflow name follows WF-XX — Intent.",
+    "Workflow file path follows the repository naming convention.",
+    "Every node has an intention-revealing name.",
+    "No node contains hard-coded credentials, tokens, cookies or private Notion text.",
+    "API nodes have explicit timeout and bounded retry behavior.",
+    "Success path emits the standard success envelope.",
+    "Error path emits the standard error envelope.",
+    "Error context is minimal and masks sensitive values.",
+    "run_id and correlation_id are propagated unchanged across workflow calls.",
+    "Reusable sub-workflow contracts are documented.",
+    "Workflow remains inactive in exported JSON unless local validation is complete."
+  ]
+}
