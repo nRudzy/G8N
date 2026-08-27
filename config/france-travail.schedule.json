@@ -1,0 +1,38 @@
+{
+  "schedule_version": "g8n.france-travail.schedule.v1",
+  "source": "france_travail",
+  "timezone": "Europe/Paris",
+  "daily_schedule": {
+    "enabled_by_default": false,
+    "hour": 6,
+    "minute": 15,
+    "description": "Local n8n schedule; disabled in exported workflow until the user enables it locally."
+  },
+  "incremental_window": {
+    "default_lookback_hours_when_no_checkpoint": 24,
+    "overlap_minutes": 90,
+    "max_window_hours": 30,
+    "watermark_field": "checkpoint_json.last_successful_window_end_utc",
+    "do_not_advance_watermark_on_status": ["partial", "failed", "cancelled"]
+  },
+  "backfill": {
+    "mode": "manual",
+    "max_days_per_run": 7,
+    "sub_window_hours": 24,
+    "require_start_end_utc": true,
+    "resume_from_failed_sub_window": true
+  },
+  "concurrency": {
+    "lock_key_template": "{source}:{window_start_utc}:{window_end_utc}",
+    "lock_table": "ingestion_runs",
+    "active_statuses": ["started"],
+    "on_existing_lock": "skip_with_locked_status"
+  },
+  "window_statuses": ["planned", "started", "completed", "partial", "failed", "skipped_locked"],
+  "delegates_to": ["WF-10", "WF-11", "WF-20", "WF-21"],
+  "privacy": {
+    "no_cloud_schedule": true,
+    "no_external_service": true,
+    "no_secret_in_schedule_config": true
+  }
+}

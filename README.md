@@ -68,6 +68,7 @@ See [docs/france-travail-pagination-checkpoints.md](docs/france-travail-paginati
 See [docs/raw-ingestion-persistence.md](docs/raw-ingestion-persistence.md) for idempotent run and raw offer persistence.
 See [docs/job-offer-normalization.md](docs/job-offer-normalization.md) for France Travail raw-to-canonical offer mapping.
 See [docs/job-offer-deduplication.md](docs/job-offer-deduplication.md) for canonical offer uniqueness and republication handling.
+See [docs/france-travail-incremental-schedule.md](docs/france-travail-incremental-schedule.md) for local incremental collection and bounded backfill.
 
 ## Version
 

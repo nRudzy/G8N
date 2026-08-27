@@ -1,0 +1,67 @@
+{
+  "name": "WF-22 — France Travail incremental schedule skeleton",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual schedule simulation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date().toISOString();\nreturn [{ json: { schedule_version: 'g8n.france-travail.schedule.v1', source: 'france_travail', timezone: 'Europe/Paris', mode: 'incremental', now_utc: now, previous_checkpoint: null, backfill: { start_utc: null, end_utc: null }, policy: { overlap_minutes: 90, default_lookback_hours_when_no_checkpoint: 24, max_window_hours: 30, max_days_per_backfill_run: 7, sub_window_hours: 24 }, existing_lock: null, delegates_to: ['WF-10', 'WF-11', 'WF-20', 'WF-21'] } }];"
+      },
+      "id": "load-schedule-policy",
+      "name": "Load — Schedule policy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst toIso = (date) => date.toISOString();\nconst now = new Date(input.now_utc);\nlet windows = [];\nif (input.mode === 'backfill') {\n  const start = new Date(input.backfill.start_utc);\n  const end = new Date(input.backfill.end_utc);\n  const maxMs = input.policy.max_days_per_backfill_run * 24 * 60 * 60 * 1000;\n  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start >= end || end - start > maxMs) {\n    return [{ json: { ...input, status: 'failed', errors: [{ code: 'G8N_SCHEDULE_INVALID_BACKFILL_WINDOW', masked: true }] } }];\n  }\n  for (let cursor = start; cursor < end; cursor = new Date(cursor.getTime() + input.policy.sub_window_hours * 3600000)) {\n    const subEnd = new Date(Math.min(cursor.getTime() + input.policy.sub_window_hours * 3600000, end.getTime()));\n    windows.push({ window_start_utc: toIso(cursor), window_end_utc: toIso(subEnd), status: 'planned' });\n  }\n} else {\n  const checkpointEnd = input.previous_checkpoint?.last_successful_window_end_utc ? new Date(input.previous_checkpoint.last_successful_window_end_utc) : new Date(now.getTime() - input.policy.default_lookback_hours_when_no_checkpoint * 3600000);\n  const start = new Date(checkpointEnd.getTime() - input.policy.overlap_minutes * 60000);\n  windows.push({ window_start_utc: toIso(start), window_end_utc: toIso(now), status: 'planned' });\n}\nreturn [{ json: { ...input, windows } }];"
+      },
+      "id": "compute-windows",
+      "name": "Compute — Windows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst locked = Boolean(input.existing_lock && input.existing_lock.status === 'started');\nconst windows = (input.windows || []).map((window) => ({ ...window, lock_key: `${input.source}:${window.window_start_utc}:${window.window_end_utc}`, status: locked ? 'skipped_locked' : 'started', watermark_can_advance: false }));\nreturn [{ json: { ...input, status: locked ? 'skipped_locked' : 'started', windows, next_step: 'Delegate each started window to WF-10/WF-11/WF-20/WF-21 locally. Advance watermark only after completed status.' } }];"
+      },
+      "id": "apply-lock",
+      "name": "Lock — Prevent concurrent window",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual schedule simulation": {
+      "main": [[{ "node": "Load — Schedule policy", "type": "main", "index": 0 }]]
+    },
+    "Load — Schedule policy": {
+      "main": [[{ "node": "Compute — Windows", "type": "main", "index": 0 }]]
+    },
+    "Compute — Windows": {
+      "main": [[{ "node": "Lock — Prevent concurrent window", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Paris",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-026-wf-22-incremental-schedule",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive local schedule/backfill skeleton. No schedule, workflow execution, Data Table operation or API call is executed by this export."
+  },
+  "tags": ["G8N", "France Travail", "schedule", "backfill", "local"]
+}
