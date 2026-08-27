@@ -73,6 +73,7 @@ See [docs/france-travail-vertical-slice-csv.md](docs/france-travail-vertical-sli
 See [docs/company-identity-matching.md](docs/company-identity-matching.md) for SIREN/SIRET resolution, evidence scoring and ambiguity rules.
 See [docs/sirene-lookup-cache.md](docs/sirene-lookup-cache.md) for the local SIRENE lookup contract, cache policy and error handling.
 See [docs/company-exact-matching.md](docs/company-exact-matching.md) for deterministic SIRET/name/location matching and persistence.
+See [docs/company-tolerant-matching.md](docs/company-tolerant-matching.md) for bounded fuzzy candidate ranking and ambiguity queue rules.
 
 ## Version
 

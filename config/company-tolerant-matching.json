@@ -1,0 +1,66 @@
+{
+  "tolerant_match_version": "g8n.company-tolerant-matching.v1",
+  "uses_match_rule_version": "g8n.company-matching.v1",
+  "max_candidates": 5,
+  "candidate_scope": {
+    "prefer_postal_code": true,
+    "fallback_city": true,
+    "fallback_department": true,
+    "never_france_wide_without_token_filter": true
+  },
+  "normalization": {
+    "remove_accents": true,
+    "fold_case": true,
+    "strip_legal_forms": true,
+    "remove_weak_tokens": ["le", "la", "les", "de", "du", "des", "et", "chez", "groupe", "societe", "entreprise"],
+    "normalize_common_abbreviations": {
+      "st": "saint",
+      "ste": "sainte",
+      "cie": "compagnie",
+      "ets": "etablissements"
+    },
+    "collapse_whitespace": true
+  },
+  "scoring": {
+    "name_similarity_weight": 55,
+    "location_weight": 25,
+    "activity_weight": 10,
+    "identifier_hint_weight": 10,
+    "auto_match_min_score": 85,
+    "ambiguous_min_score": 60,
+    "min_top_margin": 12,
+    "name_similarity_alone_max_score": 59
+  },
+  "location_scores": {
+    "same_postal_code": 25,
+    "same_city": 18,
+    "same_department": 10,
+    "unknown_location": 0,
+    "conflicting_location": -20
+  },
+  "activity_scores": {
+    "same_naf": 10,
+    "compatible_naf_section": 5,
+    "unknown": 0,
+    "incompatible": -10
+  },
+  "outputs": {
+    "candidate_table": "company_match_candidates",
+    "ambiguity_table": "company_match_reviews",
+    "top_candidate_status": ["matched", "ambiguous", "unresolved"],
+    "reason_codes": [
+      "G8N_TOLERANT_ACCENT_LEGAL_FORM",
+      "G8N_TOLERANT_ABBREVIATION",
+      "G8N_TOLERANT_TYPO",
+      "G8N_TOLERANT_CLOSE_SCORES",
+      "G8N_TOLERANT_NO_CREDIBLE_CANDIDATE",
+      "G8N_TOLERANT_LOCATION_CONFLICT"
+    ]
+  },
+  "privacy": {
+    "no_llm": true,
+    "no_client_inference": true,
+    "synthetic_examples_only": true,
+    "no_secret": true
+  }
+}

@@ -505,6 +505,119 @@
       }
     },
     {
+      "name": "company_match_candidates",
+      "upsert_key": "candidate_key",
+      "columns": {
+        "candidate_key": {
+          "type": "string",
+          "required": true
+        },
+        "offer_key": {
+          "type": "string",
+          "required": true
+        },
+        "match_rule_version": {
+          "type": "string",
+          "required": true
+        },
+        "rank": {
+          "type": "integer",
+          "required": true
+        },
+        "candidate_siren": {
+          "type": "string|null",
+          "required": false
+        },
+        "candidate_siret": {
+          "type": "string|null",
+          "required": false
+        },
+        "total_score": {
+          "type": "number",
+          "required": true
+        },
+        "score_dimensions_json": {
+          "type": "string",
+          "required": true
+        },
+        "reason": {
+          "type": "string",
+          "required": true
+        },
+        "candidate_json": {
+          "type": "string",
+          "required": true
+        },
+        "updated_at": {
+          "type": "datetime_utc",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "company_match_reviews",
+      "upsert_key": "review_key",
+      "columns": {
+        "review_key": {
+          "type": "string",
+          "required": true
+        },
+        "offer_key": {
+          "type": "string",
+          "required": true
+        },
+        "match_rule_version": {
+          "type": "string",
+          "required": true
+        },
+        "status": {
+          "type": "string",
+          "required": true,
+          "values": [
+            "À vérifier",
+            "validé",
+            "rejeté"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "required": true
+        },
+        "top_margin": {
+          "type": "number|null",
+          "required": false
+        },
+        "candidates_json": {
+          "type": "string",
+          "required": true
+        },
+        "decision_company_key": {
+          "type": "string|null",
+          "required": false
+        },
+        "decision_establishment_key": {
+          "type": "string|null",
+          "required": false
+        },
+        "decided_by": {
+          "type": "string|null",
+          "required": false
+        },
+        "decided_at": {
+          "type": "datetime_utc|null",
+          "required": false
+        },
+        "created_at": {
+          "type": "datetime_utc",
+          "required": true
+        },
+        "updated_at": {
+          "type": "datetime_utc",
+          "required": true
+        }
+      }
+    },
+    {
       "name": "company_matches",
       "upsert_key": "match_key",
       "columns": {

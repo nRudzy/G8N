@@ -1,0 +1,108 @@
+{
+  "name": "WF-33 — Tolerant company matching",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual tolerant matching simulation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { tolerant_match_version: 'g8n.company-tolerant-matching.v1', match_rule_version: 'g8n.company-matching.v1', max_candidates: 5, thresholds: { auto_match_min_score: 85, ambiguous_min_score: 60, min_top_margin: 12 }, offers: [], candidates_by_offer_key: {}, next_step: 'Wire unresolved/ambiguous offers and bounded SIRENE candidates locally.' } }];"
+      },
+      "id": "load-tolerant-context",
+      "name": "Load — Tolerant context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst weak = new Set(['le','la','les','de','du','des','et','chez','groupe','societe','entreprise']);\nconst norm = (value) => String(value || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('fr-FR').replace(/\\bets\\b/g, 'etablissements').replace(/\\bcie\\b/g, 'compagnie').replace(/\\b(sa|sas|sasu|sarl|eurl|scop|association|ei|eirl)\\b/g, ' ').replace(/[^a-z0-9 ]+/g, ' ').split(/\\s+/).filter((t) => t && !weak.has(t)).join(' ');\nconst dice = (a, b) => { if (!a || !b) return 0; const grams = (s) => new Set([...Array(Math.max(s.length - 1, 1)).keys()].map((i) => s.slice(i, i + 2))); const ga = grams(a); const gb = grams(b); const inter = [...ga].filter((g) => gb.has(g)).length; return Math.round((2 * inter / Math.max(ga.size + gb.size, 1)) * 55); };\nconst locScore = (offer, c) => offer.postal_code && c.postal_code && String(offer.postal_code) === String(c.postal_code) ? 25 : norm(offer.city) && norm(offer.city) === norm(c.city) ? 18 : offer.department && c.postal_code && String(c.postal_code).startsWith(String(offer.department)) ? 10 : 0;\nconst rows = [];\nfor (const offer of input.offers) {\n  const candidates = (input.candidates_by_offer_key[offer.offer_key] || []).slice(0, input.max_candidates);\n  const ranked = candidates.map((c) => { const name_score = dice(norm(offer.declared_company_name || offer.company_name), norm(c.legal_name || c.trade_name)); const location_score = locScore(offer, c); const activity_score = offer.naf_code && c.naf_code && offer.naf_code === c.naf_code ? 10 : 0; const identifier_hint_score = c.siren || c.siret ? 10 : 0; const total_score = Math.min(100, name_score + location_score + activity_score + identifier_hint_score); return { candidate: c, score_dimensions: { name_score, location_score, activity_score, identifier_hint_score }, total_score }; }).sort((a, b) => b.total_score - a.total_score);\n  const top = ranked[0] || null; const second = ranked[1] || null; const margin = top && second ? top.total_score - second.total_score : 100;\n  let status = 'unresolved'; let reason = 'G8N_TOLERANT_NO_CREDIBLE_CANDIDATE';\n  if (top && top.total_score >= input.thresholds.auto_match_min_score && margin >= input.thresholds.min_top_margin && top.score_dimensions.location_score > 0) { status = 'matched'; reason = 'G8N_TOLERANT_ACCENT_LEGAL_FORM'; }\n  else if (top && top.total_score >= input.thresholds.ambiguous_min_score) { status = 'ambiguous'; reason = margin < input.thresholds.min_top_margin ? 'G8N_TOLERANT_CLOSE_SCORES' : 'G8N_TOLERANT_TYPO'; }\n  rows.push({ offer_key: offer.offer_key, status, reason, top_margin: margin, ranked_candidates: ranked, review_required: status !== 'matched' });\n}\nreturn [{ json: { ...input, tolerant_match_results: rows } }];"
+      },
+      "id": "rank-candidates",
+      "name": "Rank — Bounded candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst now = new Date().toISOString();\nconst reviews = [];\nconst candidateRows = [];\nfor (const result of input.tolerant_match_results || []) {\n  for (const [rank, item] of result.ranked_candidates.entries()) candidateRows.push({ candidate_key: `${result.offer_key}:${input.tolerant_match_version}:${rank + 1}`, offer_key: result.offer_key, match_rule_version: input.match_rule_version, rank: rank + 1, candidate_siren: item.candidate.siren || null, candidate_siret: item.candidate.siret || null, total_score: item.total_score, score_dimensions_json: JSON.stringify(item.score_dimensions), reason: result.reason, candidate_json: JSON.stringify(item.candidate), updated_at: now });\n  if (result.review_required) reviews.push({ review_key: `${result.offer_key}:${input.tolerant_match_version}`, offer_key: result.offer_key, match_rule_version: input.match_rule_version, status: 'À vérifier', reason: result.reason, top_margin: result.top_margin, candidates_json: JSON.stringify(result.ranked_candidates), created_at: now, updated_at: now });\n}\nreturn [{ json: { ...input, company_match_candidate_upserts: candidateRows, company_match_review_upserts: reviews, next_step: 'Wire Data Table upserts locally; do not auto-validate weak cases.' } }];"
+      },
+      "id": "prepare-review-queue",
+      "name": "Prepare — Ambiguity queue",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual tolerant matching simulation": {
+      "main": [
+        [
+          {
+            "node": "Load — Tolerant context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load — Tolerant context": {
+      "main": [
+        [
+          {
+            "node": "Rank — Bounded candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rank — Bounded candidates": {
+      "main": [
+        [
+          {
+            "node": "Prepare — Ambiguity queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-033-wf-33-tolerant-company-matching",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive tolerant matching skeleton. No API, LLM, Data Table operation or test is executed by this export."
+  },
+  "tags": [
+    "G8N",
+    "SIRENE",
+    "tolerant matching",
+    "ambiguity",
+    "Data Tables"
+  ]
+}

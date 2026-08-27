@@ -1,0 +1,51 @@
+{
+  "fixture_version": "g8n.company-tolerant-matching.expected.v1",
+  "tolerant_match_version": "g8n.company-tolerant-matching.v1",
+  "source": "synthetic",
+  "cases": [
+    {
+      "name": "accent_and_legal_form",
+      "offer_name": "Boulangerie Étoile SAS",
+      "offer_city": "Lyon",
+      "candidates": [
+        { "siren": "223456789", "siret": "22345678900021", "legal_name": "BOULANGERIE ETOILE", "city": "Lyon", "postal_code": "69003", "naf_code": "1071C" }
+      ],
+      "expected": { "status": "matched", "reason_code": "G8N_TOLERANT_ACCENT_LEGAL_FORM", "score_min": 85 }
+    },
+    {
+      "name": "abbreviated_trade_name",
+      "offer_name": "Ets Martin Services",
+      "offer_city": "Tours",
+      "candidates": [
+        { "siren": "723456789", "siret": "72345678900072", "legal_name": "ETABLISSEMENTS MARTIN SERVICES", "city": "Tours", "postal_code": "37000" }
+      ],
+      "expected": { "status": "matched", "reason_code": "G8N_TOLERANT_ABBREVIATION", "score_min": 85 }
+    },
+    {
+      "name": "light_typo",
+      "offer_name": "Restaurent du Port",
+      "offer_city": "Marseille",
+      "candidates": [
+        { "siren": "823456789", "siret": "82345678900088", "legal_name": "RESTAURANT DU PORT", "city": "Marseille", "postal_code": "13002" }
+      ],
+      "expected": { "status": "ambiguous", "reason_code": "G8N_TOLERANT_TYPO", "score_range": [60, 84] }
+    },
+    {
+      "name": "close_homonyms",
+      "offer_name": "Garage Central",
+      "offer_city": "Gironde",
+      "candidates": [
+        { "siren": "523456789", "siret": "52345678900057", "legal_name": "GARAGE CENTRAL", "city": "Mérignac", "postal_code": "33700" },
+        { "siren": "623456789", "siret": "62345678900063", "legal_name": "GARAGE CENTRAL", "city": "Bordeaux", "postal_code": "33000" }
+      ],
+      "expected": { "status": "ambiguous", "reason_code": "G8N_TOLERANT_CLOSE_SCORES", "top_margin_max": 12 }
+    },
+    {
+      "name": "no_credible_candidate",
+      "offer_name": "Entreprise confidentielle",
+      "offer_city": "France",
+      "candidates": [],
+      "expected": { "status": "unresolved", "reason_code": "G8N_TOLERANT_NO_CREDIBLE_CANDIDATE", "score_max": 59 }
+    }
+  ]
+}
