@@ -1,0 +1,22 @@
+{
+  "classifier_version": "g8n.job-classifier.deterministic.v1",
+  "taxonomy_version": "g8n.job-taxonomy.v1",
+  "llm_required": false,
+  "cache_key_template": "{offer_fingerprint}:{taxonomy_version}:{classifier_version}",
+  "decision_order": ["structured_code", "keyword_exact", "keyword_contains", "ambiguous_conflict", "unclassified"],
+  "confidence": {
+    "structured_code": 0.95,
+    "single_keyword": 0.8,
+    "multiple_consistent_keywords": 0.85,
+    "ambiguous": 0.45,
+    "unclassified": 0.2
+  },
+  "statuses": ["classified", "ambiguous", "unclassified"],
+  "reason_codes": [
+    "G8N_CLASS_CODE_MATCH",
+    "G8N_CLASS_KEYWORD_MATCH",
+    "G8N_CLASS_MULTIPLE_CONSISTENT",
+    "G8N_CLASS_FAMILY_CONFLICT",
+    "G8N_CLASS_NO_MATCH"
+  ]
+}

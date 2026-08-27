@@ -1139,6 +1139,31 @@
         "classified_at": {
           "type": "datetime_utc",
           "required": true
+        },
+        "taxonomy_version": {
+          "type": "string",
+          "required": true
+        },
+        "family_ids_json": {
+          "type": "string",
+          "required": true
+        },
+        "training_need_ids_json": {
+          "type": "string",
+          "required": true
+        },
+        "classification_status": {
+          "type": "string",
+          "required": true,
+          "values": [
+            "classified",
+            "ambiguous",
+            "unclassified"
+          ]
+        },
+        "offer_fingerprint": {
+          "type": "string|null",
+          "required": false
         }
       }
     },

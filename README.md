@@ -80,6 +80,7 @@ See [docs/pappers-targeted-enrichment.md](docs/pappers-targeted-enrichment.md) f
 See [docs/company-health-normalization.md](docs/company-health-normalization.md) for cautious legal/financial health normalization without false zeroes.
 See [docs/company-matching-benchmark.md](docs/company-matching-benchmark.md) for the reproducible matching precision benchmark contract.
 See [docs/job-taxonomy-training-needs.md](docs/job-taxonomy-training-needs.md) for the versioned tension job taxonomy and training-need mapping.
+See [docs/job-deterministic-classification.md](docs/job-deterministic-classification.md) for rule-based offer classification without LLM.
 
 ## Version
 

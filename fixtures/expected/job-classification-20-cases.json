@@ -1,0 +1,28 @@
+{
+  "fixture_version": "g8n.job-classification.expected.v1",
+  "classifier_version": "g8n.job-classifier.deterministic.v1",
+  "taxonomy_version": "g8n.job-taxonomy.v1",
+  "source": "synthetic",
+  "cases": [
+    {"title":"Aide-soignant H/F","job_code":"J1501","expected":{"status":"classified","family_id":"care_health"}},
+    {"title":"Infirmier de nuit","job_code":null,"expected":{"status":"classified","family_id":"care_health"}},
+    {"title":"Auxiliaire de vie à domicile","job_code":null,"expected":{"status":"classified","family_id":"care_health"}},
+    {"title":"Serveur polyvalent","job_code":null,"expected":{"status":"classified","family_id":"hospitality_food"}},
+    {"title":"Cuisinier en collectivité","job_code":null,"expected":{"status":"classified","family_id":"hospitality_food"}},
+    {"title":"Boulanger pâtissier","job_code":null,"expected":{"status":"classified","family_id":"hospitality_food"}},
+    {"title":"Chauffeur livreur VL","job_code":null,"expected":{"status":"classified","family_id":"logistics_transport"}},
+    {"title":"Préparateur de commandes cariste","job_code":null,"expected":{"status":"classified","family_id":"logistics_transport"}},
+    {"title":"Magasinier réceptionnaire","job_code":null,"expected":{"status":"classified","family_id":"logistics_transport"}},
+    {"title":"Maçon coffreur","job_code":null,"expected":{"status":"classified","family_id":"construction_trades"}},
+    {"title":"Électricien bâtiment","job_code":null,"expected":{"status":"classified","family_id":"construction_trades"}},
+    {"title":"Plombier chauffagiste","job_code":null,"expected":{"status":"classified","family_id":"construction_trades"}},
+    {"title":"Technicien maintenance industrielle","job_code":null,"expected":{"status":"classified","family_id":"industry_maintenance"}},
+    {"title":"Soudeur TIG MIG","job_code":null,"expected":{"status":"classified","family_id":"industry_maintenance"}},
+    {"title":"Conducteur de ligne production","job_code":null,"expected":{"status":"classified","family_id":"industry_maintenance"}},
+    {"title":"Développeur PHP Symfony","job_code":null,"expected":{"status":"classified","family_id":"it_digital"}},
+    {"title":"Technicien support informatique","job_code":null,"expected":{"status":"classified","family_id":"it_digital"}},
+    {"title":"Agent polyvalent","job_code":null,"expected":{"status":"ambiguous","family_id":null}},
+    {"title":"Responsable communication","job_code":null,"expected":{"status":"unclassified","family_id":null}},
+    {"title":"Serveur livreur polyvalent","job_code":null,"expected":{"status":"ambiguous","family_id":null}}
+  ]
+}

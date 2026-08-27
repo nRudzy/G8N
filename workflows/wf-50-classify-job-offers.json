@@ -1,0 +1,53 @@
+{
+  "name": "WF-50 — Classify job offers deterministically",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual classification simulation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { classifier_version: 'g8n.job-classifier.deterministic.v1', taxonomy_version: 'g8n.job-taxonomy.v1', offers: [], taxonomy_families: [], taxonomy_keywords: [], training_needs: [], next_step: 'Wire normalized offers and taxonomy Data Tables locally. No LLM is used.' } }];"
+      },
+      "id": "load-classifier-context",
+      "name": "Load — Classifier context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst norm = (value) => String(value || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('fr-FR').replace(/[^a-z0-9 ]+/g, ' ').replace(/\\s+/g, ' ').trim();\nconst priorityByFamily = Object.fromEntries((input.taxonomy_families || []).map((f) => [f.family_id, f.priority || 0]));\nconst needsByFamily = (input.training_needs || []).reduce((acc, n) => { (acc[n.family_id] ||= []).push(n.need_id); return acc; }, {});\nconst rows = [];\nfor (const offer of input.offers || []) {\n  const title = norm(offer.normalized_title || offer.title);\n  const matches = [];\n  for (const kw of input.taxonomy_keywords || []) if (title.includes(norm(kw.normalized_keyword || kw.keyword))) matches.push({ family_id: kw.family_id, reason: 'G8N_CLASS_KEYWORD_MATCH' });\n  const unique = [...new Set(matches.map((m) => m.family_id))];\n  let status = 'unclassified'; let family_ids = []; let confidence = 0.2; let reasons = ['G8N_CLASS_NO_MATCH'];\n  if (offer.job_code && offer.job_code_family_id) { status = 'classified'; family_ids = [offer.job_code_family_id]; confidence = 0.95; reasons = ['G8N_CLASS_CODE_MATCH']; }\n  else if (unique.length === 1) { status = 'classified'; family_ids = unique; confidence = matches.length > 1 ? 0.85 : 0.8; reasons = [matches.length > 1 ? 'G8N_CLASS_MULTIPLE_CONSISTENT' : 'G8N_CLASS_KEYWORD_MATCH']; }\n  else if (unique.length > 1) { status = 'ambiguous'; family_ids = unique.sort((a, b) => (priorityByFamily[b] || 0) - (priorityByFamily[a] || 0)); confidence = 0.45; reasons = ['G8N_CLASS_FAMILY_CONFLICT']; }\n  const primary = status === 'classified' ? family_ids[0] : null;\n  rows.push({ classification_key: `${offer.offer_key || offer.title}:${input.taxonomy_version}:${input.classifier_version}`, offer_key: offer.offer_key || null, classifier_version: input.classifier_version, taxonomy_version: input.taxonomy_version, job_family: primary, family_ids_json: JSON.stringify(family_ids), is_tension_job: primary ? Boolean((input.taxonomy_families || []).find((f) => f.family_id === primary)?.reference_tension) : false, training_need_ids_json: JSON.stringify(primary ? (needsByFamily[primary] || []) : []), confidence, reasons_json: JSON.stringify(reasons), classification_status: status, classified_at: new Date().toISOString() });\n}\nreturn [{ json: { ...input, job_classification_upserts: rows } }];"
+      },
+      "id": "classify-offers",
+      "name": "Classify — Offers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual classification simulation": {
+      "main": [[{ "node": "Load — Classifier context", "type": "main", "index": 0 }]]
+    },
+    "Load — Classifier context": {
+      "main": [[{ "node": "Classify — Offers", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-041-wf-50-deterministic-job-classifier",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive deterministic classifier. No LLM, API, Data Table operation or test is executed by this export."
+  },
+  "tags": ["G8N", "classification", "taxonomy", "no LLM", "Data Tables"]
+}
