@@ -1,0 +1,58 @@
+{
+  "fixture_version": "g8n.company-identity-consolidation.expected.v1",
+  "identity_model_version": "g8n.company-identity-consolidation.v1",
+  "source": "synthetic",
+  "cases": [
+    {
+      "name": "headquarters_plus_two_establishments",
+      "company_key": "siren:123456789",
+      "establishments": ["siret:12345678900015", "siret:12345678900028", "siret:12345678900031"],
+      "expected": {
+        "company_count": 1,
+        "establishment_count": 3,
+        "headquarters_count": 1,
+        "aggregate_by": "company_key"
+      }
+    },
+    {
+      "name": "address_change_creates_new_snapshot",
+      "entity_key": "siret:22345678900021",
+      "payload_hashes": ["hash-address-a", "hash-address-b"],
+      "expected": {
+        "snapshot_count": 2,
+        "current_snapshot_count": 1,
+        "previous_snapshot_kept": true
+      }
+    },
+    {
+      "name": "closed_establishment_kept",
+      "entity_key": "siret:32345678900037",
+      "establishment_status": "closed",
+      "expected": {
+        "visible_in_history": true,
+        "current_status": "closed",
+        "not_deleted": true
+      }
+    },
+    {
+      "name": "two_trade_names_same_siren",
+      "company_key": "siren:423456789",
+      "aliases": ["Café du Centre", "CDC Restauration"],
+      "expected": {
+        "company_count": 1,
+        "alias_count": 2,
+        "no_duplicate_company": true
+      }
+    },
+    {
+      "name": "same_snapshot_replay",
+      "entity_key": "siren:523456789",
+      "payload_hash": "same-hash",
+      "expected": {
+        "first_write": "insert",
+        "replay_write": "no_op_or_update_timestamp_only",
+        "snapshot_count_after_replay": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "name": "WF-34 — Consolidate company identity",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual identity consolidation simulation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { identity_model_version: 'g8n.company-identity-consolidation.v1', matched_offers: [], sirene_envelopes: [], now_utc: new Date().toISOString(), next_step: 'Wire matched offers and SIRENE envelopes locally. This skeleton does not write Data Tables.' } }];"
+      },
+      "id": "load-identity-context",
+      "name": "Load — Identity context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst norm = (value) => String(value || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('fr-FR').replace(/[^a-z0-9 ]+/g, ' ').replace(/\\s+/g, ' ').trim();\nconst plans = { companies: [], establishments: [], aliases: [], identity_snapshots: [], job_offer_updates: [] };\nfor (const env of input.sirene_envelopes || []) {\n  for (const c of env.candidates || []) {\n    const company_key = c.siren ? `siren:${c.siren}` : null;\n    const establishment_key = c.siret ? `siret:${c.siret}` : null;\n    if (company_key) plans.companies.push({ company_key, siren: c.siren, legal_name: c.legal_name || null, naf_code: c.naf_code || null, employee_band: c.employee_band || null, identity_confidence: c.identity_confidence || 0, updated_at: input.now_utc });\n    if (company_key && establishment_key) plans.establishments.push({ establishment_key, company_key, siren: c.siren, siret: c.siret, legal_name: c.legal_name || null, trade_name: c.trade_name || null, establishment_status: c.establishment_status || null, address_line: c.address_line || null, postal_code: c.postal_code || null, city: c.city || null, identity_confidence: c.identity_confidence || 0, match_rule_version: 'g8n.company-matching.v1', updated_at: input.now_utc });\n    for (const alias of [c.legal_name, c.trade_name].filter(Boolean)) plans.aliases.push({ alias_key: `${company_key}:${norm(alias)}`, company_key, alias_type: alias === c.legal_name ? 'legal_name' : 'trade_name', alias_value: alias, normalized_alias: norm(alias), source: 'sirene', updated_at: input.now_utc });\n    const entity_key = establishment_key || company_key;\n    if (entity_key && c.payload_hash) plans.identity_snapshots.push({ identity_snapshot_key: `sirene:${establishment_key ? 'establishment' : 'company'}:${entity_key}:${c.payload_hash}`, provider: 'sirene', entity_type: establishment_key ? 'establishment' : 'company', entity_key, payload_hash: c.payload_hash, payload_path: c.payload_path || null, source_version: c.source_version || 'unknown', fetched_at: c.fetched_at || input.now_utc, valid_from: c.source_updated_at || c.fetched_at || input.now_utc, valid_to: null, is_current: true, updated_at: input.now_utc });\n  }\n}\nfor (const offer of input.matched_offers || []) plans.job_offer_updates.push({ offer_key: offer.offer_key, company_key: offer.company_key, establishment_key: offer.establishment_key, updated_at: input.now_utc });\nreturn [{ json: { ...input, upsert_plans: plans, aggregation_key: 'company_key', next_step: 'Wire local Data Table upserts in transactional order.' } }];"
+      },
+      "id": "prepare-identity-upserts",
+      "name": "Prepare — Identity upserts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual identity consolidation simulation": {
+      "main": [[{ "node": "Load — Identity context", "type": "main", "index": 0 }]]
+    },
+    "Load — Identity context": {
+      "main": [[{ "node": "Prepare — Identity upserts", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-034-wf-34-company-identity-consolidation",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive identity consolidation skeleton. No Data Table operation, API call or test is executed by this export."
+  },
+  "tags": ["G8N", "SIRENE", "identity", "establishments", "Data Tables"]
+}

@@ -690,6 +690,116 @@
       }
     },
     {
+      "name": "company_aliases",
+      "upsert_key": "alias_key",
+      "columns": {
+        "alias_key": {
+          "type": "string",
+          "required": true
+        },
+        "company_key": {
+          "type": "string",
+          "required": true
+        },
+        "alias_type": {
+          "type": "string",
+          "required": true,
+          "values": [
+            "legal_name",
+            "trade_name",
+            "brand",
+            "source_declared_name"
+          ]
+        },
+        "alias_value": {
+          "type": "string",
+          "required": true
+        },
+        "normalized_alias": {
+          "type": "string",
+          "required": true
+        },
+        "source": {
+          "type": "string",
+          "required": true
+        },
+        "first_seen_at": {
+          "type": "datetime_utc|null",
+          "required": false
+        },
+        "last_seen_at": {
+          "type": "datetime_utc|null",
+          "required": false
+        },
+        "updated_at": {
+          "type": "datetime_utc",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "identity_snapshots",
+      "upsert_key": "identity_snapshot_key",
+      "columns": {
+        "identity_snapshot_key": {
+          "type": "string",
+          "required": true
+        },
+        "provider": {
+          "type": "string",
+          "required": true
+        },
+        "entity_type": {
+          "type": "string",
+          "required": true,
+          "values": [
+            "company",
+            "establishment"
+          ]
+        },
+        "entity_key": {
+          "type": "string",
+          "required": true
+        },
+        "payload_hash": {
+          "type": "string",
+          "required": true
+        },
+        "payload_path": {
+          "type": "string|null",
+          "required": false
+        },
+        "source_version": {
+          "type": "string",
+          "required": true
+        },
+        "fetched_at": {
+          "type": "datetime_utc",
+          "required": true
+        },
+        "valid_from": {
+          "type": "datetime_utc|null",
+          "required": false
+        },
+        "valid_to": {
+          "type": "datetime_utc|null",
+          "required": false
+        },
+        "is_current": {
+          "type": "boolean",
+          "required": true
+        },
+        "summary_json": {
+          "type": "string|null",
+          "required": false
+        },
+        "updated_at": {
+          "type": "datetime_utc",
+          "required": true
+        }
+      }
+    },
+    {
       "name": "company_enrichments",
       "upsert_key": "enrichment_key",
       "columns": {

@@ -1,0 +1,40 @@
+{
+  "identity_model_version": "g8n.company-identity-consolidation.v1",
+  "aggregation_level": "siren",
+  "source_establishment_retention": true,
+  "keys": {
+    "company_key": "siren:{siren}",
+    "establishment_key": "siret:{siret}",
+    "identity_snapshot_key": "{provider}:{entity_type}:{entity_key}:{payload_hash}",
+    "alias_key": "{company_key}:{normalized_alias}"
+  },
+  "rules": {
+    "never_merge_two_siren_on_name": true,
+    "offer_contributes_to_company_siren": true,
+    "offer_keeps_source_siret": true,
+    "address_change_creates_snapshot": true,
+    "same_payload_hash_is_idempotent": true,
+    "closed_establishment_remains_visible": true,
+    "current_state_uses_latest_valid_snapshot": true
+  },
+  "entity_types": ["company", "establishment"],
+  "snapshot_fields": [
+    "provider",
+    "source_version",
+    "entity_type",
+    "entity_key",
+    "payload_hash",
+    "valid_from",
+    "valid_to",
+    "fetched_at",
+    "is_current"
+  ],
+  "alias_types": ["legal_name", "trade_name", "brand", "source_declared_name"],
+  "aggregation_windows": ["24h", "7d", "30d", "90d"],
+  "privacy": {
+    "public_company_data_only": true,
+    "no_personal_data": true,
+    "no_group_capitalistic_consolidation": true,
+    "synthetic_examples_only": true
+  }
+}

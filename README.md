@@ -74,6 +74,7 @@ See [docs/company-identity-matching.md](docs/company-identity-matching.md) for S
 See [docs/sirene-lookup-cache.md](docs/sirene-lookup-cache.md) for the local SIRENE lookup contract, cache policy and error handling.
 See [docs/company-exact-matching.md](docs/company-exact-matching.md) for deterministic SIRET/name/location matching and persistence.
 See [docs/company-tolerant-matching.md](docs/company-tolerant-matching.md) for bounded fuzzy candidate ranking and ambiguity queue rules.
+See [docs/company-identity-consolidation.md](docs/company-identity-consolidation.md) for SIREN/SIRET consolidation, aliases and identity snapshots.
 
 ## Version
 
