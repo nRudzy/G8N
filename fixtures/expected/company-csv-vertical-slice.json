@@ -1,0 +1,78 @@
+{
+  "fixture_version": "g8n.company-csv.expected.v1",
+  "source": "synthetic",
+  "csv_policy": "g8n.france-travail.company-csv.v1",
+  "input_rows": [
+    {
+      "offer_key": "france_travail:FT-SYN-001",
+      "canonical_offer_key": "france_travail:FT-SYN-001",
+      "source": "france_travail",
+      "declared_company_name": "Boulangerie Étoile",
+      "city": "Lyon",
+      "title": "Boulanger / Boulangère",
+      "published_at": "2026-08-20T08:00:00Z",
+      "normalization_status": "valid",
+      "status": "active"
+    },
+    {
+      "offer_key": "france_travail:FT-SYN-002",
+      "canonical_offer_key": "france_travail:FT-SYN-002",
+      "source": "france_travail",
+      "declared_company_name": "Boulangerie Étoile",
+      "city": "Lyon",
+      "title": "Vendeur, vendeuse en boulangerie",
+      "published_at": "2026-08-22T09:30:00Z",
+      "normalization_status": "needs_review",
+      "status": "active"
+    },
+    {
+      "offer_key": "france_travail:FT-SYN-003",
+      "canonical_offer_key": "france_travail:FT-SYN-003",
+      "source": "france_travail",
+      "declared_company_name": "Café du Centre",
+      "city": "Nantes",
+      "title": "Serveur polyvalent",
+      "published_at": "2026-08-21T07:45:00Z",
+      "normalization_status": "valid",
+      "status": "active"
+    },
+    {
+      "offer_key": "france_travail:FT-SYN-003-DUP",
+      "canonical_offer_key": "france_travail:FT-SYN-003",
+      "source": "france_travail",
+      "declared_company_name": "Café du Centre",
+      "city": "Nantes",
+      "title": "Serveur polyvalent",
+      "published_at": "2026-08-21T07:45:00Z",
+      "normalization_status": "valid",
+      "status": "duplicate"
+    }
+  ],
+  "expected_business_rows": [
+    {
+      "declared_company_name": "Boulangerie Étoile",
+      "city": "Lyon",
+      "offer_count": 2,
+      "titles": "Boulanger / Boulangère; Vendeur, vendeuse en boulangerie",
+      "first_published_at": "2026-08-20",
+      "last_published_at": "2026-08-22",
+      "source_offer_keys": "france_travail:FT-SYN-001; france_travail:FT-SYN-002"
+    },
+    {
+      "declared_company_name": "Café du Centre",
+      "city": "Nantes",
+      "offer_count": 1,
+      "titles": "Serveur polyvalent",
+      "first_published_at": "2026-08-21",
+      "last_published_at": "2026-08-21",
+      "source_offer_keys": "france_travail:FT-SYN-003"
+    }
+  ],
+  "edge_cases_covered": [
+    "accented characters",
+    "comma inside title",
+    "duplicate row excluded",
+    "needs_review row included",
+    "stable business rows despite volatile run metadata"
+  ]
+}

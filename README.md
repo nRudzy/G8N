@@ -69,6 +69,7 @@ See [docs/raw-ingestion-persistence.md](docs/raw-ingestion-persistence.md) for i
 See [docs/job-offer-normalization.md](docs/job-offer-normalization.md) for France Travail raw-to-canonical offer mapping.
 See [docs/job-offer-deduplication.md](docs/job-offer-deduplication.md) for canonical offer uniqueness and republication handling.
 See [docs/france-travail-incremental-schedule.md](docs/france-travail-incremental-schedule.md) for local incremental collection and bounded backfill.
+See [docs/france-travail-vertical-slice-csv.md](docs/france-travail-vertical-slice-csv.md) for the local France Travail to CSV vertical slice.
 
 ## Version
 

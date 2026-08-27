@@ -1,0 +1,79 @@
+{
+  "name": "WF-30 — Export France Travail company CSV",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual CSV export",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { export_version: 'g8n.france-travail.company-csv.v1', run_id: `csv-${new Date().toISOString().replace(/[:.]/g, '-')}`, generated_at: new Date().toISOString(), output_directory: 'exports/france-travail', file_name_hint: 'france-travail-company-slice-{run_id}-{generated_at}.csv', rows: [], counters: { input_rows: 0, exported_rows: 0, duplicate_rows: 0, rejected_rows: 0 }, next_step: 'Wire rows from the local job_offers Data Table before executing this export.' } }];"
+      },
+      "id": "load-export-context",
+      "name": "Load — Export context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst allowedStatuses = new Set(['valid', 'needs_review']);\nconst excludedOfferStatuses = new Set(['duplicate', 'rejected']);\nconst dateOnly = (value) => value ? String(value).slice(0, 10) : '';\nconst clean = (value) => String(value ?? '').replace(/\\s+/g, ' ').trim();\nconst groups = new Map();\nconst counters = { input_rows: input.rows.length, exported_rows: 0, duplicate_rows: 0, rejected_rows: 0 };\nfor (const row of input.rows) {\n  if (excludedOfferStatuses.has(row.status)) { counters.duplicate_rows += row.status === 'duplicate' ? 1 : 0; counters.rejected_rows += row.status === 'rejected' ? 1 : 0; continue; }\n  if (!allowedStatuses.has(row.normalization_status)) { counters.rejected_rows += 1; continue; }\n  const company = clean(row.declared_company_name || row.company_name || 'Entreprise non déclarée');\n  const city = clean(row.city || row.location_label || 'Localisation non déclarée');\n  const key = `${company}|${city}`;\n  if (!groups.has(key)) groups.set(key, { run_id: input.run_id, generated_at: input.generated_at, declared_company_name: company, city, offer_keys: new Set(), titles: new Set(), dates: [] });\n  const group = groups.get(key);\n  const offerKey = row.canonical_offer_key || row.offer_key;\n  if (offerKey) group.offer_keys.add(offerKey);\n  if (row.title) group.titles.add(clean(row.title));\n  if (row.published_at) group.dates.push(dateOnly(row.published_at));\n}\nconst business_rows = [...groups.values()].map((group) => ({ run_id: group.run_id, generated_at: group.generated_at, declared_company_name: group.declared_company_name, city: group.city, offer_count: group.offer_keys.size, titles: [...group.titles].sort().join('; '), first_published_at: group.dates.sort()[0] || '', last_published_at: group.dates.sort().slice(-1)[0] || '', source_offer_keys: [...group.offer_keys].sort().join('; ') })).sort((a, b) => `${a.declared_company_name}|${a.city}`.localeCompare(`${b.declared_company_name}|${b.city}`, 'fr-FR'));\ncounters.exported_rows = business_rows.length;\nreturn [{ json: { ...input, business_rows, counters } }];"
+      },
+      "id": "aggregate-company-city",
+      "name": "Aggregate — Company and city",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst columns = ['run_id', 'generated_at', 'declared_company_name', 'city', 'offer_count', 'titles', 'first_published_at', 'last_published_at', 'source_offer_keys'];\nconst escapeCsv = (value) => `\"${String(value ?? '').replace(/\"/g, '\"\"').replace(/\\r?\\n/g, ' ')}\"`;\nconst lines = [columns.map(escapeCsv).join(',')];\nfor (const row of input.business_rows) lines.push(columns.map((column) => escapeCsv(row[column])).join(','));\nconst generatedCompact = input.generated_at.replace(/[-:]/g, '').replace(/\\.\\d+Z$/, 'Z');\nconst file_name = `france-travail-company-slice-${input.run_id}-${generatedCompact}.csv`;\nreturn [{ json: { ...input, csv_columns: columns, csv_content_utf8_bom: `\\ufeff${lines.join('\\r\\n')}\\r\\n`, file_path: `${input.output_directory}/${file_name}`, file_name } }];"
+      },
+      "id": "render-csv",
+      "name": "Render — Excel friendly CSV",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn [{ json: { export_version: input.export_version, run_id: input.run_id, generated_at: input.generated_at, file_path: input.file_path, counters: input.counters, replay_note: 'Business rows should remain stable for identical input; run_id, generated_at and file name are volatile.', gaps_to_record_locally: ['Rows requiring normalization review', 'Missing company or city values', 'Duplicate and republication counts', 'CSV opening result in Excel/LibreOffice'], next_step: 'Add local Data Table read and local file write nodes, then execute locally only.' } }];"
+      },
+      "id": "return-export-report",
+      "name": "Return — Export report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual CSV export": {
+      "main": [[{ "node": "Load — Export context", "type": "main", "index": 0 }]]
+    },
+    "Load — Export context": {
+      "main": [[{ "node": "Aggregate — Company and city", "type": "main", "index": 0 }]]
+    },
+    "Aggregate — Company and city": {
+      "main": [[{ "node": "Render — Excel friendly CSV", "type": "main", "index": 0 }]]
+    },
+    "Render — Excel friendly CSV": {
+      "main": [[{ "node": "Return — Export report", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-027-wf-30-company-csv",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive vertical slice CSV export skeleton. No Data Table read/write, file write, workflow run or API call is executed by this export."
+  },
+  "tags": ["G8N", "France Travail", "CSV", "vertical slice", "local"]
+}

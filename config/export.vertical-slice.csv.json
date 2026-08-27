@@ -1,0 +1,50 @@
+{
+  "export_version": "g8n.france-travail.company-csv.v1",
+  "source": "france_travail",
+  "purpose": "POC vertical slice aggregate from canonical job_offers to a flat CSV file",
+  "input_table": "job_offers",
+  "output": {
+    "directory": "exports/france-travail",
+    "file_name_template": "france-travail-company-slice-{run_id}-{generated_at_yyyymmddhhmmss}.csv",
+    "encoding": "utf-8-sig",
+    "delimiter": ",",
+    "line_ending": "CRLF",
+    "quote": "\"",
+    "quote_all_fields": true
+  },
+  "filters": {
+    "source": "france_travail",
+    "exclude_statuses": ["duplicate", "rejected"],
+    "include_normalization_statuses": ["valid", "needs_review"]
+  },
+  "group_by": ["declared_company_name", "city"],
+  "columns": [
+    "run_id",
+    "generated_at",
+    "declared_company_name",
+    "city",
+    "offer_count",
+    "titles",
+    "first_published_at",
+    "last_published_at",
+    "source_offer_keys"
+  ],
+  "aggregation": {
+    "offer_count": "count distinct canonical_offer_key",
+    "titles": "distinct titles joined with semicolon and spaces",
+    "first_published_at": "minimum published_at date",
+    "last_published_at": "maximum published_at date",
+    "source_offer_keys": "distinct offer_key values joined with semicolon and spaces"
+  },
+  "replay_expectation": {
+    "same_input_same_business_rows": true,
+    "volatile_fields": ["run_id", "generated_at", "file_name"]
+  },
+  "privacy": {
+    "synthetic_examples_only": true,
+    "no_pappers": true,
+    "no_llm": true,
+    "no_crm": true,
+    "no_secret": true
+  }
+}
