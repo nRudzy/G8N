@@ -1,0 +1,134 @@
+{
+  "version": "G8N-001",
+  "scope": {
+    "country": "FR",
+    "coverage": "whole_country",
+    "timezone": "Europe/Paris",
+    "unknown_values_policy": "do_not_reject_by_default"
+  },
+  "decision_model": {
+    "hard_exclusions_apply_first": true,
+    "score_thresholds": {
+      "target": 55,
+      "qualified": 30,
+      "watch": 10,
+      "out_of_scope": 0
+    }
+  },
+  "geography": {
+    "included_regions": ["FR"],
+    "included_departments": ["all"],
+    "effect": "bonus",
+    "score": 5,
+    "justification": "The user explicitly selected full France coverage for the first version."
+  },
+  "company_size": {
+    "employee_bands": [
+      { "band": "unknown", "effect": "information", "score": 0 },
+      { "band": "1-9", "effect": "penalty", "score": -5 },
+      { "band": "10-49", "effect": "bonus", "score": 10 },
+      { "band": "50-249", "effect": "bonus", "score": 18 },
+      { "band": "250-999", "effect": "bonus", "score": 15 },
+      { "band": "1000+", "effect": "bonus", "score": 8 }
+    ],
+    "justification": "Mid-market employers are more likely to have repeated hiring needs while staying prospectable."
+  },
+  "naf": {
+    "included_prefixes": [
+      { "prefix": "10", "label": "Food manufacturing", "score": 12 },
+      { "prefix": "25", "label": "Metal products manufacturing", "score": 10 },
+      { "prefix": "28", "label": "Machinery and equipment", "score": 10 },
+      { "prefix": "29", "label": "Automotive industry", "score": 12 },
+      { "prefix": "32", "label": "Other manufacturing", "score": 8 },
+      { "prefix": "41", "label": "Construction of buildings", "score": 8 },
+      { "prefix": "42", "label": "Civil engineering", "score": 8 },
+      { "prefix": "43", "label": "Specialized construction", "score": 8 },
+      { "prefix": "46", "label": "Wholesale trade", "score": 6 },
+      { "prefix": "49", "label": "Land transport", "score": 12 },
+      { "prefix": "52", "label": "Warehousing and transport support", "score": 12 },
+      { "prefix": "53", "label": "Postal and courier activities", "score": 10 },
+      { "prefix": "55", "label": "Accommodation", "score": 8 },
+      { "prefix": "56", "label": "Food and beverage service", "score": 8 },
+      { "prefix": "78", "label": "Employment activities", "score": 6 },
+      { "prefix": "81", "label": "Services to buildings and landscape", "score": 10 },
+      { "prefix": "82", "label": "Office administrative and support", "score": 8 },
+      { "prefix": "86", "label": "Human health activities", "score": 10 },
+      { "prefix": "87", "label": "Residential care", "score": 10 },
+      { "prefix": "88", "label": "Social work", "score": 8 }
+    ],
+    "neutral_prefixes": [
+      { "prefix": "47", "label": "Retail trade" },
+      { "prefix": "58", "label": "Publishing" },
+      { "prefix": "59", "label": "Audiovisual production" },
+      { "prefix": "62", "label": "IT services" },
+      { "prefix": "63", "label": "Information services" },
+      { "prefix": "68", "label": "Real estate" },
+      { "prefix": "70", "label": "Head offices and consulting" },
+      { "prefix": "71", "label": "Engineering and technical studies" },
+      { "prefix": "73", "label": "Advertising and market research" },
+      { "prefix": "85", "label": "Education" }
+    ],
+    "hard_excluded_prefixes": [
+      { "prefix": "64", "label": "Financial services" },
+      { "prefix": "65", "label": "Insurance" },
+      { "prefix": "66", "label": "Auxiliary financial activities" },
+      { "prefix": "84", "label": "Public administration" },
+      { "prefix": "94", "label": "Membership organizations" },
+      { "prefix": "97", "label": "Household employers" },
+      { "prefix": "99", "label": "Extraterritorial organizations" }
+    ],
+    "unknown_policy": "neutral"
+  },
+  "jobs": {
+    "included_families": [
+      { "key": "production", "keywords": ["production", "opérateur", "conducteur de ligne", "agent de fabrication"], "score": 14 },
+      { "key": "logistics", "keywords": ["logistique", "préparateur de commandes", "cariste", "magasinier"], "score": 14 },
+      { "key": "transport", "keywords": ["chauffeur", "conducteur routier", "livreur"], "score": 12 },
+      { "key": "construction", "keywords": ["chantier", "maçon", "électricien", "plombier", "chef d'équipe"], "score": 10 },
+      { "key": "hospitality", "keywords": ["serveur", "cuisinier", "réceptionniste", "employé polyvalent"], "score": 8 },
+      { "key": "healthcare", "keywords": ["aide-soignant", "infirmier", "auxiliaire de vie"], "score": 10 },
+      { "key": "maintenance", "keywords": ["maintenance", "technicien", "régleur"], "score": 10 },
+      { "key": "customer_operations", "keywords": ["conseiller client", "centre d'appels", "support client"], "score": 6 }
+    ],
+    "penalized_families": [
+      { "key": "executive_only", "keywords": ["directeur", "chief", "vp", "head of"], "score": -15 },
+      { "key": "highly_specialized_it_only", "keywords": ["architecte cloud", "data scientist", "devops senior"], "score": -8 }
+    ]
+  },
+  "contracts": {
+    "included": [
+      { "type": "CDI", "score": 8 },
+      { "type": "CDD", "score": 8 },
+      { "type": "INTERIM", "score": 10 },
+      { "type": "SAISONNIER", "score": 8 },
+      { "type": "ALTERNANCE", "score": 2 }
+    ],
+    "penalized": [
+      { "type": "STAGE", "score": -12 },
+      { "type": "FREELANCE", "score": -10 }
+    ],
+    "unknown_policy": "neutral"
+  },
+  "hard_exclusions": [
+    {
+      "key": "outside_france",
+      "condition": "job_location_country is known and not FR",
+      "reason": "G8N V1 is scoped to France."
+    },
+    {
+      "key": "public_administration_only",
+      "condition": "naf_prefix in hard_excluded_prefixes and no included job family signal",
+      "reason": "Low direct commercial fit for the POC."
+    },
+    {
+      "key": "consumer_or_individual_employer",
+      "condition": "employer type indicates individual household or consumer-only buyer",
+      "reason": "Not a B2B prospect."
+    },
+    {
+      "key": "internship_only_campaign",
+      "condition": "all observed jobs are internships",
+      "reason": "Not a mass operational hiring signal for the target ICP."
+    }
+  ]
+}

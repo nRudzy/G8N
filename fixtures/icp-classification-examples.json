@@ -1,0 +1,114 @@
+{
+  "version": "G8N-001",
+  "description": "Synthetic ICP examples for manual review. No real company, offer, Notion export, secret or production payload is included.",
+  "examples": [
+    {
+      "id": "ICP-001",
+      "company_profile": "Fictional regional food manufacturer, 120 employees, France",
+      "naf_prefix": "10",
+      "job_signal": "Five operator and maintenance roles in 30 days",
+      "contract_types": ["CDI", "CDD"],
+      "expected_class": "target",
+      "rationale": "Included sector, mid-market size and operational hiring families."
+    },
+    {
+      "id": "ICP-002",
+      "company_profile": "Fictional logistics warehouse group, 850 employees, multi-site France",
+      "naf_prefix": "52",
+      "job_signal": "Warehouse and forklift roles across several sites",
+      "contract_types": ["INTERIM", "CDI"],
+      "expected_class": "target",
+      "rationale": "Strong included sector, relevant roles and repeated operational hiring."
+    },
+    {
+      "id": "ICP-003",
+      "company_profile": "Fictional building contractor, 38 employees, France",
+      "naf_prefix": "43",
+      "job_signal": "Electrician and site lead roles",
+      "contract_types": ["CDI"],
+      "expected_class": "qualified",
+      "rationale": "Relevant sector and job families, smaller size but still prospectable."
+    },
+    {
+      "id": "ICP-004",
+      "company_profile": "Fictional hospital services provider, unknown employee count, France",
+      "naf_prefix": "86",
+      "job_signal": "Care assistant roles",
+      "contract_types": ["CDD"],
+      "expected_class": "qualified",
+      "rationale": "Unknown size must not reject the case; healthcare roles remain relevant."
+    },
+    {
+      "id": "ICP-005",
+      "company_profile": "Fictional restaurant group, 65 employees, France",
+      "naf_prefix": "56",
+      "job_signal": "Kitchen and service staff roles for several restaurants",
+      "contract_types": ["SAISONNIER", "CDI"],
+      "expected_class": "qualified",
+      "rationale": "Hospitality is included with operational job families and recurring needs."
+    },
+    {
+      "id": "ICP-006",
+      "company_profile": "Fictional software consultancy, 90 employees, France",
+      "naf_prefix": "62",
+      "job_signal": "Two senior DevOps roles",
+      "contract_types": ["CDI"],
+      "expected_class": "watch",
+      "rationale": "Neutral sector and specialized IT roles make this lower priority, not an automatic refusal."
+    },
+    {
+      "id": "ICP-007",
+      "company_profile": "Fictional retail chain, 420 employees, France",
+      "naf_prefix": "47",
+      "job_signal": "Store assistants and warehouse roles",
+      "contract_types": ["CDD", "CDI"],
+      "expected_class": "qualified",
+      "rationale": "Retail sector is neutral, but scale and operational roles can still qualify the account."
+    },
+    {
+      "id": "ICP-008",
+      "company_profile": "Fictional insurance broker, 210 employees, France",
+      "naf_prefix": "66",
+      "job_signal": "Several account manager roles",
+      "contract_types": ["CDI"],
+      "expected_class": "out_of_scope",
+      "rationale": "Hard-excluded financial services family with no operational hiring signal."
+    },
+    {
+      "id": "ICP-009",
+      "company_profile": "Fictional public administration office, 1000+ employees, France",
+      "naf_prefix": "84",
+      "job_signal": "Administrative roles",
+      "contract_types": ["CDD"],
+      "expected_class": "out_of_scope",
+      "rationale": "Public administration is excluded for the POC commercial target."
+    },
+    {
+      "id": "ICP-010",
+      "company_profile": "Fictional individual household employer, France",
+      "naf_prefix": "97",
+      "job_signal": "One domestic worker role",
+      "contract_types": ["CDI"],
+      "expected_class": "out_of_scope",
+      "rationale": "Not a B2B employer prospect."
+    },
+    {
+      "id": "ICP-011",
+      "company_profile": "Fictional transport SME, 22 employees, France",
+      "naf_prefix": "49",
+      "job_signal": "Driver roles in two locations",
+      "contract_types": ["CDI"],
+      "expected_class": "qualified",
+      "rationale": "Strong transport signal despite smaller company size."
+    },
+    {
+      "id": "ICP-012",
+      "company_profile": "Fictional manufacturer, employee count missing, France",
+      "naf_prefix": "25",
+      "job_signal": "Production and maintenance roles",
+      "contract_types": ["UNKNOWN"],
+      "expected_class": "qualified",
+      "rationale": "Missing contract and size values remain neutral; sector and roles carry the decision."
+    }
+  ]
+}
