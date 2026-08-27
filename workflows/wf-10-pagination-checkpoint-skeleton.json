@@ -1,0 +1,79 @@
+{
+  "name": "WF-10 — France Travail pagination checkpoint skeleton",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual pagination scenario",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date().toISOString();\nconst policy = { policy_version: 'g8n.france-travail.pagination.v1', range_size: 50, max_pages_per_run: 20, max_calls_per_run: 30, retryable_http_statuses: [408, 429, 500, 502, 503, 504], non_retryable_http_statuses: [400, 401, 403, 404, 409, 422], max_attempts_per_page: 3, base_delay_seconds: 2, max_delay_seconds: 120, respect_retry_after: true, jitter_max_seconds: 3 };\nreturn [{ json: { run_id: `ft_pages_${now.replace(/[-:.]/g, '').slice(0, 15)}Z`, schema_version: 'g8n.workflow-envelope.v1', source: { workflow_id: 'WF-10', workflow_name: 'WF-10 — France Travail pagination checkpoint skeleton', node_name: 'Prepare — Pagination policy', origin: 'manual_local' }, timestamps: { started_at: now, finished_at: null }, payload: { config_version: 'g8n.france-travail.search.v1', query_hash: 'manual-query-hash-placeholder', current_range: '0-49', policy, page_result: null, persistence_result: { persisted: false, reason: 'G8N-023 persistence not wired in skeleton' } }, checkpoint: { last_persisted_range: null, next_range: '0-49', advance_allowed: false }, counters: { calls: 0, pages_seen: 0, pages_persisted: 0, offers_seen: 0, offers_persisted: 0, retries: 0, errors: 0 }, errors: [] } }];"
+      },
+      "id": "prepare-pagination-policy",
+      "name": "Prepare — Pagination policy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst status = Number(input.payload.page_result?.http_status || 200);\nconst retryAfter = input.payload.page_result?.retry_after || null;\nconst policy = input.payload.policy;\nconst isRetryable = policy.retryable_http_statuses.includes(status);\nconst isNonRetryable = policy.non_retryable_http_statuses.includes(status) || (status >= 400 && status < 500 && status !== 429);\nconst errors = [...input.errors];\nlet pageState = 'ready_to_persist';\nlet delaySeconds = 0;\nif (status === 401) pageState = 'credential_action_required';\nelse if (status === 403) pageState = 'authorization_action_required';\nelse if (status === 429) {\n  pageState = 'rate_limited';\n  delaySeconds = retryAfter ? Number(retryAfter) : policy.base_delay_seconds;\n} else if (isRetryable) {\n  pageState = 'retryable_error';\n  delaySeconds = Math.min(policy.max_delay_seconds, policy.base_delay_seconds);\n} else if (isNonRetryable) pageState = 'non_retryable_error';\nif (pageState !== 'ready_to_persist') errors.push({ code: `G8N_FT_${String(status)}`, category: pageState, recoverable: isRetryable, masked: true, retry_after_seconds: delaySeconds });\nconst pageOffers = input.payload.page_result?.offer_ids || [];\nreturn [{ json: { ...input, payload: { ...input.payload, page_state: pageState, retry_after_seconds: delaySeconds }, counters: { ...input.counters, calls: input.counters.calls + 1, pages_seen: input.counters.pages_seen + (status === 200 ? 1 : 0), offers_seen: input.counters.offers_seen + pageOffers.length, retries: input.counters.retries + (pageState === 'retryable_error' || pageState === 'rate_limited' ? 1 : 0), errors: errors.length }, errors } }];"
+      },
+      "id": "classify-page-result",
+      "name": "Classify — Page result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst [start, end] = String(input.payload.current_range).split('-').map(Number);\nconst rangeSize = input.payload.policy.range_size;\nconst persistenceSucceeded = input.payload.persistence_result.persisted === true;\nconst nextStart = end + 1;\nconst nextEnd = nextStart + rangeSize - 1;\nconst nextRange = `${nextStart}-${nextEnd}`;\nconst repeatedRange = input.checkpoint.last_persisted_range === input.payload.current_range;\nconst maxCallsReached = input.counters.calls >= input.payload.policy.max_calls_per_run;\nconst canAdvance = input.payload.page_state === 'ready_to_persist' && persistenceSucceeded && !repeatedRange;\nlet status = 'partial';\nif (canAdvance && !maxCallsReached) status = 'ready_for_next_page';\nif (maxCallsReached) status = 'partial_call_budget_reached';\nif (repeatedRange) status = 'partial_pagination_loop_guard';\nreturn [{ json: { ...input, status, checkpoint: { last_persisted_range: canAdvance ? input.payload.current_range : input.checkpoint.last_persisted_range, next_range: canAdvance ? nextRange : input.checkpoint.next_range, advance_allowed: canAdvance }, counters: { ...input.counters, pages_persisted: input.counters.pages_persisted + (canAdvance ? 1 : 0), offers_persisted: input.counters.offers_persisted + (canAdvance ? (input.payload.page_result?.offer_ids || []).length : 0) } } }];"
+      },
+      "id": "propose-checkpoint",
+      "name": "Checkpoint — Advance after persistence",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn [{ json: { ...input, timestamps: { ...input.timestamps, finished_at: new Date().toISOString() }, payload: { ...input.payload, next_step: 'Wire real HTTP and Data Table persistence locally only after G8N-020 and G8N-023 validation. This skeleton intentionally performs no API call.' } } }];"
+      },
+      "id": "return-run-summary",
+      "name": "Return — Pagination summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual pagination scenario": {
+      "main": [[{ "node": "Prepare — Pagination policy", "type": "main", "index": 0 }]]
+    },
+    "Prepare — Pagination policy": {
+      "main": [[{ "node": "Classify — Page result", "type": "main", "index": 0 }]]
+    },
+    "Classify — Page result": {
+      "main": [[{ "node": "Checkpoint — Advance after persistence", "type": "main", "index": 0 }]]
+    },
+    "Checkpoint — Advance after persistence": {
+      "main": [[{ "node": "Return — Pagination summary", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-022-wf-10-pagination-checkpoint-skeleton",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive pagination/retry/checkpoint skeleton. No HTTP request or persistence operation is executed by this export."
+  },
+  "tags": ["G8N", "France Travail", "pagination", "checkpoint", "retry"]
+}

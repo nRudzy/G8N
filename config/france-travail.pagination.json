@@ -1,0 +1,63 @@
+{
+  "policy_version": "g8n.france-travail.pagination.v1",
+  "applies_to": "WF-10",
+  "source": "france_travail",
+  "pagination": {
+    "range_size": 50,
+    "first_range_start": 0,
+    "max_pages_per_run": 20,
+    "max_calls_per_run": 30,
+    "stop_when_empty_page": true,
+    "stop_when_repeated_range": true,
+    "stop_when_total_known_and_reached": true
+  },
+  "retry": {
+    "max_attempts_per_page": 3,
+    "retryable_http_statuses": [408, 429, 500, 502, 503, 504],
+    "non_retryable_http_statuses": [400, 401, 403, 404, 409, 422],
+    "base_delay_seconds": 2,
+    "max_delay_seconds": 120,
+    "respect_retry_after": true,
+    "jitter": {
+      "enabled": true,
+      "max_seconds": 3
+    }
+  },
+  "checkpoint": {
+    "scope": "source + config_version + publication_window + query_hash",
+    "storage_table": "ingestion_runs",
+    "status_values": ["started", "partial", "completed", "failed", "cancelled"],
+    "fields": {
+      "last_persisted_range": "metadata.checkpoint.last_persisted_range",
+      "next_range": "metadata.checkpoint.next_range",
+      "persisted_offer_count": "metadata.counters.offers_persisted",
+      "page_count": "metadata.counters.pages_persisted",
+      "call_count": "metadata.counters.calls",
+      "retry_count": "metadata.counters.retries"
+    },
+    "advance_only_after": "raw batch persistence succeeds",
+    "resume_from": "next_range"
+  },
+  "error_policy": {
+    "401": "fail_run_credential_action_required",
+    "403": "fail_run_authorization_action_required",
+    "429": "honor_retry_after_then_partial_if_budget_exceeded",
+    "4xx": "fail_page_as_non_retryable",
+    "5xx": "retry_then_partial",
+    "pagination_loop": "partial_with_loop_guard"
+  },
+  "observability": {
+    "counters": [
+      "calls",
+      "pages_seen",
+      "pages_persisted",
+      "offers_seen",
+      "offers_persisted",
+      "retries",
+      "errors"
+    ],
+    "duration_unit": "milliseconds",
+    "mask_query_values": false,
+    "mask_credentials": true
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "fixture_version": "g8n.france-travail.pagination.fixtures.v1",
+  "source": "synthetic",
+  "scenarios": [
+    {
+      "name": "three_pages_nominal",
+      "description": "Three sequential pages with unique offer ids.",
+      "pages": [
+        {
+          "range": "0-1",
+          "http_status": 200,
+          "retry_after": null,
+          "offer_ids": ["FT-PAGE-001", "FT-PAGE-002"],
+          "total": 6
+        },
+        {
+          "range": "2-3",
+          "http_status": 200,
+          "retry_after": null,
+          "offer_ids": ["FT-PAGE-003", "FT-PAGE-004"],
+          "total": 6
+        },
+        {
+          "range": "4-5",
+          "http_status": 200,
+          "retry_after": null,
+          "offer_ids": ["FT-PAGE-005", "FT-PAGE-006"],
+          "total": 6
+        }
+      ],
+      "expected_checkpoint": {
+        "last_persisted_range": "4-5",
+        "next_range": "6-7",
+        "status": "completed"
+      }
+    },
+    {
+      "name": "temporary_500_then_success",
+      "description": "Page two fails once then succeeds without advancing checkpoint before persistence.",
+      "pages": [
+        {
+          "range": "0-1",
+          "http_status": 200,
+          "offer_ids": ["FT-RETRY-001", "FT-RETRY-002"],
+          "attempt": 1
+        },
+        {
+          "range": "2-3",
+          "http_status": 500,
+          "offer_ids": [],
+          "attempt": 1
+        },
+        {
+          "range": "2-3",
+          "http_status": 200,
+          "offer_ids": ["FT-RETRY-003", "FT-RETRY-004"],
+          "attempt": 2
+        }
+      ],
+      "expected_checkpoint": {
+        "last_persisted_range": "2-3",
+        "next_range": "4-5",
+        "status": "partial_or_completed_according_to_total"
+      }
+    },
+    {
+      "name": "rate_limit_retry_after",
+      "description": "429 response carries a Retry-After value that must drive the next wait budget.",
+      "pages": [
+        {
+          "range": "0-49",
+          "http_status": 429,
+          "retry_after": "60",
+          "offer_ids": [],
+          "attempt": 1
+        }
+      ],
+      "expected_checkpoint": {
+        "last_persisted_range": null,
+        "next_range": "0-49",
+        "status": "partial"
+      }
+    },
+    {
+      "name": "repeated_range_guard",
+      "description": "A repeated range is treated as a pagination loop and stops the run cleanly.",
+      "pages": [
+        {
+          "range": "0-49",
+          "http_status": 200,
+          "offer_ids": ["FT-LOOP-001"]
+        },
+        {
+          "range": "0-49",
+          "http_status": 200,
+          "offer_ids": ["FT-LOOP-001"]
+        }
+      ],
+      "expected_checkpoint": {
+        "last_persisted_range": "0-49",
+        "next_range": "50-99",
+        "status": "partial"
+      }
+    }
+  ]
+}
