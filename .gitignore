@@ -1,0 +1,24 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# n8n state must remain in the named Docker volume
+.n8n/
+database.sqlite*
+
+# Raw API payloads, generated exports and backups are local-only
+data/raw/*
+!data/raw/.gitkeep
+exports/*
+!exports/.gitkeep
+backups/*
+!backups/.gitkeep
+
+# Local tooling
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+node_modules/
+*.log
