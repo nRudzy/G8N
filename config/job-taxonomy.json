@@ -1,0 +1,80 @@
+{
+  "taxonomy_version": "g8n.job-taxonomy.v1",
+  "valid_from": "2026-08-27",
+  "valid_to": null,
+  "source_note": "Initial G8N synthetic/reference taxonomy for V1. Replace or extend locally with authorized official references when available.",
+  "separate_reference_tension_from_observed_demand": true,
+  "families": [
+    {
+      "family_id": "care_health",
+      "label": "Care and health support",
+      "reference_tension": true,
+      "priority": 90,
+      "keywords": ["aide soignant", "infirmier", "auxiliaire de vie", "ash", "soignant"],
+      "training_needs": [
+        {"need_id": "care_certification", "label": "Certification and care pathway onboarding", "confidence": 0.75},
+        {"need_id": "patient_safety", "label": "Patient safety and hygiene refresh", "confidence": 0.65}
+      ]
+    },
+    {
+      "family_id": "hospitality_food",
+      "label": "Hospitality and food services",
+      "reference_tension": true,
+      "priority": 75,
+      "keywords": ["serveur", "cuisinier", "commis", "boulanger", "employe polyvalent restauration"],
+      "training_needs": [
+        {"need_id": "food_hygiene", "label": "Food hygiene and service basics", "confidence": 0.8},
+        {"need_id": "customer_service", "label": "Customer service and shift onboarding", "confidence": 0.6}
+      ]
+    },
+    {
+      "family_id": "logistics_transport",
+      "label": "Logistics and transport",
+      "reference_tension": true,
+      "priority": 80,
+      "keywords": ["chauffeur", "conducteur", "preparateur commande", "magasinier", "cariste", "livreur"],
+      "training_needs": [
+        {"need_id": "safety_driving", "label": "Safety, driving and handling authorization", "confidence": 0.8},
+        {"need_id": "warehouse_process", "label": "Warehouse process and WMS onboarding", "confidence": 0.65}
+      ]
+    },
+    {
+      "family_id": "construction_trades",
+      "label": "Construction and skilled trades",
+      "reference_tension": true,
+      "priority": 78,
+      "keywords": ["macon", "electricien", "plombier", "menuisier", "couvreur", "peintre batiment"],
+      "training_needs": [
+        {"need_id": "site_safety", "label": "Site safety and certification refresh", "confidence": 0.8},
+        {"need_id": "trade_upskilling", "label": "Trade-specific upskilling", "confidence": 0.7}
+      ]
+    },
+    {
+      "family_id": "industry_maintenance",
+      "label": "Industry and maintenance",
+      "reference_tension": true,
+      "priority": 82,
+      "keywords": ["technicien maintenance", "operateur production", "soudeur", "tourneur", "conducteur ligne"],
+      "training_needs": [
+        {"need_id": "industrial_safety", "label": "Industrial safety and machine onboarding", "confidence": 0.75},
+        {"need_id": "maintenance_methods", "label": "Maintenance methods and diagnostics", "confidence": 0.7}
+      ]
+    },
+    {
+      "family_id": "it_digital",
+      "label": "IT and digital operations",
+      "reference_tension": false,
+      "priority": 60,
+      "keywords": ["developpeur", "technicien support", "administrateur systeme", "data analyst"],
+      "training_needs": [
+        {"need_id": "digital_onboarding", "label": "Digital tools and support onboarding", "confidence": 0.55}
+      ]
+    }
+  ],
+  "priority_rules": [
+    "Prefer structured job code when available.",
+    "If several families match by keyword, choose the highest priority family and keep secondary needs.",
+    "Ambiguous generic titles are marked needs_review.",
+    "Out-of-scope roles keep family_id=null without dropping the offer."
+  ]
+}

@@ -983,6 +983,128 @@
       }
     },
     {
+      "name": "job_taxonomy_families",
+      "upsert_key": "family_key",
+      "columns": {
+        "family_key": {
+          "type": "string",
+          "required": true
+        },
+        "taxonomy_version": {
+          "type": "string",
+          "required": true
+        },
+        "family_id": {
+          "type": "string",
+          "required": true
+        },
+        "label": {
+          "type": "string",
+          "required": true
+        },
+        "reference_tension": {
+          "type": "boolean",
+          "required": true
+        },
+        "priority": {
+          "type": "integer",
+          "required": true
+        },
+        "valid_from": {
+          "type": "date",
+          "required": true
+        },
+        "valid_to": {
+          "type": "date|null",
+          "required": false
+        },
+        "updated_at": {
+          "type": "datetime_utc",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "job_taxonomy_keywords",
+      "upsert_key": "keyword_key",
+      "columns": {
+        "keyword_key": {
+          "type": "string",
+          "required": true
+        },
+        "taxonomy_version": {
+          "type": "string",
+          "required": true
+        },
+        "family_id": {
+          "type": "string",
+          "required": true
+        },
+        "keyword": {
+          "type": "string",
+          "required": true
+        },
+        "normalized_keyword": {
+          "type": "string",
+          "required": true
+        },
+        "valid_from": {
+          "type": "date",
+          "required": true
+        },
+        "valid_to": {
+          "type": "date|null",
+          "required": false
+        },
+        "updated_at": {
+          "type": "datetime_utc",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "job_training_needs",
+      "upsert_key": "need_key",
+      "columns": {
+        "need_key": {
+          "type": "string",
+          "required": true
+        },
+        "taxonomy_version": {
+          "type": "string",
+          "required": true
+        },
+        "family_id": {
+          "type": "string",
+          "required": true
+        },
+        "need_id": {
+          "type": "string",
+          "required": true
+        },
+        "label": {
+          "type": "string",
+          "required": true
+        },
+        "confidence": {
+          "type": "number",
+          "required": true
+        },
+        "valid_from": {
+          "type": "date",
+          "required": true
+        },
+        "valid_to": {
+          "type": "date|null",
+          "required": false
+        },
+        "updated_at": {
+          "type": "datetime_utc",
+          "required": true
+        }
+      }
+    },
+    {
       "name": "job_classifications",
       "upsert_key": "classification_key",
       "columns": {

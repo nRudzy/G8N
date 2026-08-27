@@ -79,6 +79,7 @@ See [docs/company-match-review-overrides.md](docs/company-match-review-overrides
 See [docs/pappers-targeted-enrichment.md](docs/pappers-targeted-enrichment.md) for gated Pappers enrichment, cache, whitelist and budget circuit breaker.
 See [docs/company-health-normalization.md](docs/company-health-normalization.md) for cautious legal/financial health normalization without false zeroes.
 See [docs/company-matching-benchmark.md](docs/company-matching-benchmark.md) for the reproducible matching precision benchmark contract.
+See [docs/job-taxonomy-training-needs.md](docs/job-taxonomy-training-needs.md) for the versioned tension job taxonomy and training-need mapping.
 
 ## Version
 

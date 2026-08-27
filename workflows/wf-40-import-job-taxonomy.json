@@ -1,0 +1,53 @@
+{
+  "name": "WF-40 — Import job taxonomy",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual taxonomy import simulation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { taxonomy_version: 'g8n.job-taxonomy.v1', valid_from: '2026-08-27', families: [], next_step: 'Load config/job-taxonomy.json locally and wire Data Table upserts. This skeleton does not write Data Tables.' } }];"
+      },
+      "id": "load-taxonomy-context",
+      "name": "Load — Taxonomy context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst family_upserts = [];\nconst keyword_upserts = [];\nconst need_upserts = [];\nfor (const family of input.families || []) {\n  family_upserts.push({ family_id: family.family_id, taxonomy_version: input.taxonomy_version, label: family.label, reference_tension: family.reference_tension, priority: family.priority, valid_from: input.valid_from, valid_to: input.valid_to || null });\n  for (const keyword of family.keywords || []) keyword_upserts.push({ keyword_key: `${input.taxonomy_version}:${family.family_id}:${keyword}`, taxonomy_version: input.taxonomy_version, family_id: family.family_id, keyword, normalized_keyword: keyword, valid_from: input.valid_from, valid_to: input.valid_to || null });\n  for (const need of family.training_needs || []) need_upserts.push({ need_key: `${input.taxonomy_version}:${family.family_id}:${need.need_id}`, taxonomy_version: input.taxonomy_version, family_id: family.family_id, need_id: need.need_id, label: need.label, confidence: need.confidence, valid_from: input.valid_from, valid_to: input.valid_to || null });\n}\nreturn [{ json: { ...input, family_upserts, keyword_upserts, training_need_upserts: need_upserts } }];"
+      },
+      "id": "prepare-taxonomy-upserts",
+      "name": "Prepare — Taxonomy upserts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual taxonomy import simulation": {
+      "main": [[{ "node": "Load — Taxonomy context", "type": "main", "index": 0 }]]
+    },
+    "Load — Taxonomy context": {
+      "main": [[{ "node": "Prepare — Taxonomy upserts", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-040-wf-40-job-taxonomy-import",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive taxonomy import skeleton. No Data Table operation or test is executed by this export."
+  },
+  "tags": ["G8N", "taxonomy", "training", "scoring", "Data Tables"]
+}

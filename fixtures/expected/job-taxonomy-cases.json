@@ -1,0 +1,12 @@
+{
+  "fixture_version": "g8n.job-taxonomy.expected.v1",
+  "taxonomy_version": "g8n.job-taxonomy.v1",
+  "source": "synthetic",
+  "cases": [
+    {"name":"exact_code_health","title":"Aide-soignant H/F","job_code":"J1501","expected":{"family_id":"care_health","status":"matched","training_need_count_min":1}},
+    {"name":"keyword_hospitality","title":"Serveur polyvalent en restaurant","job_code":null,"expected":{"family_id":"hospitality_food","status":"matched"}},
+    {"name":"ambiguous_agent","title":"Agent polyvalent","job_code":null,"expected":{"family_id":null,"status":"needs_review"}},
+    {"name":"two_training_needs","title":"Cariste préparateur de commandes","job_code":null,"expected":{"family_id":"logistics_transport","training_need_count_min":2}},
+    {"name":"out_of_scope","title":"Responsable communication marque","job_code":null,"expected":{"family_id":null,"status":"out_of_scope"}}
+  ]
+}
