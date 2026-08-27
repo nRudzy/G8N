@@ -1,0 +1,156 @@
+{
+  "schema_version": "0.1.0",
+  "naming": "snake_case",
+  "timestamp_storage": "UTC ISO-8601",
+  "display_timezone": "Europe/Paris",
+  "null_semantics": {
+    "absent": "field not provided by the source or previous workflow",
+    "unknown": "source says the value exists but is not known",
+    "not_applicable": "field does not apply to this object",
+    "error": "value could not be produced because a controlled error happened"
+  },
+  "common_fields": {
+    "schema_version": { "type": "string", "required": true, "example": "0.1.0", "source": "g8n" },
+    "run_id": { "type": "string", "required": true, "example": "run_20260827_120000_manual", "source": "g8n" },
+    "source": { "type": "string", "required": true, "example": "france_travail", "source": "workflow" },
+    "collected_at": { "type": "datetime_utc", "required": true, "example": "2026-08-27T10:00:00Z", "source": "workflow" }
+  },
+  "objects": {
+    "raw_job_offer": {
+      "description": "Thin index for a raw source offer stored as a local JSON file.",
+      "primary_key": ["source", "source_offer_id"],
+      "fields": {
+        "source_offer_id": { "type": "string", "required": true, "source": "source", "example": "FT-123456" },
+        "raw_payload_path": { "type": "string", "required": true, "source": "g8n", "example": "data/raw/france_travail/2026/08/27/FT-123456.json" },
+        "raw_payload_sha256": { "type": "string", "required": true, "source": "g8n", "example": "sha256:example" },
+        "source_updated_at": { "type": "datetime_utc|null", "required": false, "source": "source", "example": "2026-08-27T09:40:00Z" }
+      }
+    },
+    "job_offer": {
+      "description": "Canonical normalized job offer used by downstream workflows.",
+      "primary_key": ["offer_id"],
+      "fields": {
+        "offer_id": { "type": "string", "required": true, "source": "g8n", "example": "offer_france_travail_FT-123456" },
+        "source_offer_id": { "type": "string", "required": true, "source": "source", "example": "FT-123456" },
+        "dedupe_fingerprint": { "type": "string", "required": true, "source": "g8n", "example": "fp_company_title_location_contract" },
+        "company_name": { "type": "string|null", "required": false, "source": "source", "example": "Entreprise Exemple" },
+        "company_siret": { "type": "string|null", "required": false, "source": "source|matching", "example": "12345678900012" },
+        "title": { "type": "string", "required": true, "source": "source", "example": "Préparateur de commandes" },
+        "normalized_title": { "type": "string", "required": true, "source": "g8n", "example": "preparateur_de_commandes" },
+        "job_family": { "type": "string|null", "required": false, "source": "g8n", "example": "logistics" },
+        "contract_type": { "type": "string|null", "required": false, "source": "source", "example": "CDI" },
+        "declared_positions": { "type": "integer|null", "required": false, "source": "source", "example": 3 },
+        "location_label": { "type": "string|null", "required": false, "source": "source", "example": "Lyon" },
+        "location_country": { "type": "string|null", "required": false, "source": "source|g8n", "example": "FR" },
+        "published_at": { "type": "datetime_utc|null", "required": false, "source": "source", "example": "2026-08-26T08:00:00Z" },
+        "expires_at": { "type": "datetime_utc|null", "required": false, "source": "source", "example": "2026-09-26T08:00:00Z" },
+        "status": { "type": "enum", "required": true, "source": "g8n", "values": ["active", "expired", "duplicate", "republication", "rejected"], "example": "active" },
+        "rejection_reason": { "type": "string|null", "required": false, "source": "g8n", "example": null }
+      }
+    },
+    "company": {
+      "description": "Canonical company identity.",
+      "primary_key": ["company_id"],
+      "fields": {
+        "company_id": { "type": "string", "required": true, "source": "g8n", "example": "company_siren_123456789" },
+        "siren": { "type": "string|null", "required": false, "source": "sirene|matching", "example": "123456789" },
+        "siret_headquarters": { "type": "string|null", "required": false, "source": "sirene", "example": "12345678900012" },
+        "legal_name": { "type": "string|null", "required": false, "source": "sirene|source", "example": "ENTREPRISE EXEMPLE" },
+        "naf_code": { "type": "string|null", "required": false, "source": "sirene|source", "example": "5210B" },
+        "employee_band": { "type": "string|null", "required": false, "source": "sirene|enrichment", "example": "50-249" },
+        "identity_confidence": { "type": "number", "required": true, "source": "matching", "example": 0.92 }
+      }
+    },
+    "company_match": {
+      "description": "Resolution result between source employer data and canonical company.",
+      "primary_key": ["match_id"],
+      "fields": {
+        "match_id": { "type": "string", "required": true, "source": "g8n", "example": "match_offer_france_travail_FT-123456" },
+        "offer_id": { "type": "string", "required": true, "source": "job_offer", "example": "offer_france_travail_FT-123456" },
+        "company_id": { "type": "string|null", "required": false, "source": "company", "example": "company_siren_123456789" },
+        "match_method": { "type": "enum", "required": true, "source": "matching", "values": ["siret_exact", "siren_exact", "name_postcode", "name_city", "manual_override", "unresolved"], "example": "siret_exact" },
+        "match_status": { "type": "enum", "required": true, "source": "matching", "values": ["matched", "ambiguous", "unresolved", "error"], "example": "matched" },
+        "confidence": { "type": "number", "required": true, "source": "matching", "example": 0.95 },
+        "reason": { "type": "string", "required": true, "source": "matching", "example": "Exact SIRET match" }
+      }
+    },
+    "company_enrichment": {
+      "description": "Optional enrichment snapshot for a company.",
+      "primary_key": ["company_id", "enrichment_source", "enriched_at"],
+      "fields": {
+        "company_id": { "type": "string", "required": true, "source": "company", "example": "company_siren_123456789" },
+        "enrichment_source": { "type": "string", "required": true, "source": "workflow", "example": "sirene" },
+        "enriched_at": { "type": "datetime_utc", "required": true, "source": "workflow", "example": "2026-08-27T10:05:00Z" },
+        "legal_status": { "type": "string|null", "required": false, "source": "enrichment", "example": "active" },
+        "financial_health": { "type": "string|null", "required": false, "source": "enrichment", "example": "unknown" },
+        "payload_path": { "type": "string|null", "required": false, "source": "g8n", "example": "data/raw/sirene/company_siren_123456789.json" }
+      }
+    },
+    "job_classification": {
+      "description": "Deterministic or optional bounded classification result for an offer.",
+      "primary_key": ["offer_id", "classifier_version"],
+      "fields": {
+        "offer_id": { "type": "string", "required": true, "source": "job_offer", "example": "offer_france_travail_FT-123456" },
+        "classifier_version": { "type": "string", "required": true, "source": "g8n", "example": "deterministic-0.1.0" },
+        "job_family": { "type": "string|null", "required": false, "source": "classifier", "example": "logistics" },
+        "is_tension_job": { "type": "boolean", "required": true, "source": "classifier", "example": true },
+        "confidence": { "type": "number", "required": true, "source": "classifier", "example": 0.80 },
+        "reasons": { "type": "array<string>", "required": true, "source": "classifier", "example": ["keyword:preparateur"] }
+      }
+    },
+    "company_signal": {
+      "description": "Aggregated company-level hiring signal.",
+      "primary_key": ["company_id", "window_key", "computed_at", "signal_version"],
+      "fields": {
+        "company_id": { "type": "string", "required": true, "source": "company", "example": "company_siren_123456789" },
+        "window_key": { "type": "enum", "required": true, "source": "g8n", "values": ["24h", "7d", "30d", "90d"], "example": "30d" },
+        "computed_at": { "type": "datetime_utc", "required": true, "source": "workflow", "example": "2026-08-27T10:10:00Z" },
+        "signal_version": { "type": "string", "required": true, "source": "g8n", "example": "0.1.0" },
+        "active_offer_count": { "type": "integer", "required": true, "source": "g8n", "example": 12 },
+        "declared_position_count": { "type": "integer", "required": true, "source": "g8n", "example": 25 },
+        "job_family_count": { "type": "integer", "required": true, "source": "g8n", "example": 3 },
+        "site_count": { "type": "integer", "required": true, "source": "g8n", "example": 4 },
+        "republication_count": { "type": "integer", "required": true, "source": "g8n", "example": 2 },
+        "confidence": { "type": "number", "required": true, "source": "g8n", "example": 0.82 }
+      }
+    },
+    "lead_score": {
+      "description": "Versioned B2B priority score.",
+      "primary_key": ["company_id", "score_version", "scored_at"],
+      "fields": {
+        "company_id": { "type": "string", "required": true, "source": "company", "example": "company_siren_123456789" },
+        "score_version": { "type": "string", "required": true, "source": "g8n", "example": "0.1.0" },
+        "scored_at": { "type": "datetime_utc", "required": true, "source": "workflow", "example": "2026-08-27T10:15:00Z" },
+        "priority_label": { "type": "enum", "required": true, "source": "g8n", "values": ["Chaud", "À qualifier", "Veille", "Écarté"], "example": "Chaud" },
+        "score": { "type": "number", "required": true, "source": "g8n", "example": 78 },
+        "confidence": { "type": "number", "required": true, "source": "g8n", "example": 0.80 },
+        "freshness": { "type": "number", "required": true, "source": "g8n", "example": 0.95 },
+        "reasons": { "type": "array<string>", "required": true, "source": "g8n", "example": ["mass_hiring:30d", "icp:naf_included"] }
+      }
+    },
+    "export_batch": {
+      "description": "Metadata for a generated export file.",
+      "primary_key": ["export_batch_id"],
+      "fields": {
+        "export_batch_id": { "type": "string", "required": true, "source": "g8n", "example": "export_20260827_101500" },
+        "created_at": { "type": "datetime_utc", "required": true, "source": "workflow", "example": "2026-08-27T10:15:00Z" },
+        "score_version": { "type": "string", "required": true, "source": "g8n", "example": "0.1.0" },
+        "row_count": { "type": "integer", "required": true, "source": "g8n", "example": 42 },
+        "file_path": { "type": "string", "required": true, "source": "g8n", "example": "exports/g8n_leads_20260827.xlsx" },
+        "file_sha256": { "type": "string", "required": true, "source": "g8n", "example": "sha256:example" }
+      }
+    }
+  },
+  "export_mapping": {
+    "Entreprise": "company.legal_name",
+    "SIREN": "company.siren",
+    "Secteur NAF": "company.naf_code",
+    "Priorité": "lead_score.priority_label",
+    "Score": "lead_score.score",
+    "Confiance": "lead_score.confidence",
+    "Fraîcheur": "lead_score.freshness",
+    "Offres 30j": "company_signal.active_offer_count",
+    "Postes déclarés 30j": "company_signal.declared_position_count",
+    "Raisons": "lead_score.reasons"
+  }
+}
