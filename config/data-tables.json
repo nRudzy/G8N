@@ -1489,6 +1489,30 @@
             "Écarté"
           ]
         },
+        "priority_version": {
+          "type": "string",
+          "required": false
+        },
+        "priority_export_allowed": {
+          "type": "boolean_string",
+          "required": false,
+          "values": [
+            "true",
+            "false"
+          ]
+        },
+        "decision_code": {
+          "type": "string",
+          "required": false
+        },
+        "positive_reasons_json": {
+          "type": "string",
+          "required": false
+        },
+        "penalty_reasons_json": {
+          "type": "string",
+          "required": false
+        },
         "score": {
           "type": "number",
           "required": true

@@ -1,0 +1,12 @@
+[
+  { "case": "boundary_24", "score": 24, "confidence": 90, "identity_status": "validated", "expected_label": "Écarté" },
+  { "case": "boundary_25", "score": 25, "confidence": 90, "identity_status": "validated", "expected_label": "Veille" },
+  { "case": "boundary_44", "score": 44, "confidence": 90, "identity_status": "validated", "expected_label": "Veille" },
+  { "case": "boundary_45", "score": 45, "confidence": 90, "identity_status": "validated", "expected_label": "À qualifier" },
+  { "case": "boundary_69", "score": 69, "confidence": 90, "identity_status": "validated", "expected_label": "À qualifier" },
+  { "case": "boundary_70", "score": 70, "confidence": 90, "identity_status": "validated", "expected_label": "Chaud" },
+  { "case": "high_score_low_confidence", "score": 80, "confidence": 40, "identity_status": "validated", "expected_label": "À qualifier", "export_priority_allowed": false },
+  { "case": "inactive_company", "score": 88, "confidence": 95, "identity_status": "validated", "exclusion_codes": ["inactive_company"], "expected_label": "Écarté", "audit_score_kept": true },
+  { "case": "excluded_sector", "score": 74, "confidence": 90, "identity_status": "validated", "exclusion_codes": ["excluded_sector"], "expected_label": "Écarté", "audit_score_kept": true },
+  { "case": "score_tie", "score": 62, "confidence": 80, "freshness": 91, "company_key": "b", "expected_sort_after": "same score, higher confidence/freshness first" }
+]

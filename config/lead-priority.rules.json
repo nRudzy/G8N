@@ -1,0 +1,22 @@
+{
+  "priority_version": "g8n.lead-priority.v1",
+  "levels": [
+    { "label": "Chaud", "score_min": 70, "score_max": 100, "minimum_confidence": 65, "requires_identity_validated": true, "export_priority": true },
+    { "label": "À qualifier", "score_min": 45, "score_max": 69, "minimum_confidence": 50, "requires_identity_validated": true, "export_priority": true },
+    { "label": "Veille", "score_min": 25, "score_max": 44, "minimum_confidence": 0, "requires_identity_validated": false, "export_priority": false },
+    { "label": "Écarté", "score_min": 0, "score_max": 24, "minimum_confidence": 0, "requires_identity_validated": false, "export_priority": false }
+  ],
+  "hard_exclusions": [
+    { "code": "inactive_company", "condition": "company_status in inactive, closed, dissolved", "effect": "force_level_écarté", "reason": "Entreprise inactive" },
+    { "code": "identity_not_validated", "condition": "identity_status in rejected, ambiguous_unreviewed", "effect": "block_priority_export", "reason": "Identité entreprise non validée" },
+    { "code": "excluded_sector", "condition": "ICP hard excluded NAF sector applies", "effect": "force_level_écarté", "reason": "Secteur exclu par l'ICP V1" }
+  ],
+  "reason_policy": {
+    "positive_reasons_limit": 3,
+    "penalty_reasons_limit": 3,
+    "source": "breakdown_json and penalties_json only",
+    "llm_allowed": false
+  },
+  "sort_order": ["level_rank", "score_desc", "confidence_desc", "freshness_desc", "company_key_asc"],
+  "decision_code_template": "priority_version:company_key:score_version:score_as_of"
+}
