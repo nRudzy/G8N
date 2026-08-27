@@ -1,0 +1,53 @@
+{
+  "name": "WF-38 — Company matching benchmark report",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual benchmark report simulation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { benchmark_version: 'g8n.company-matching-benchmark.v1', dataset_version: 'g8n.company-matching-benchmark.synthetic-50.v1', match_rule_version: 'g8n.company-matching.v1', expected_cases: [], actual_results_by_case_id: {}, now_utc: new Date().toISOString(), next_step: 'Wire benchmark dataset and local matching outputs. This workflow does not execute matching itself.' } }];"
+      },
+      "id": "load-benchmark-context",
+      "name": "Load — Benchmark context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst counters = { total: input.expected_cases.length, auto_validated: 0, auto_correct: 0, ambiguous: 0, unresolved: 0, errors: 0 };\nconst errors = [];\nfor (const expected of input.expected_cases || []) {\n  const actual = input.actual_results_by_case_id[expected.case_id] || { decision: 'missing' };\n  if (actual.decision === 'matched') counters.auto_validated += 1;\n  if (actual.decision === 'matched' && expected.expected_decision === 'matched' && (!expected.expected_siret || expected.expected_siret === actual.siret)) counters.auto_correct += 1;\n  if (actual.decision === 'ambiguous') counters.ambiguous += 1;\n  if (actual.decision === 'unresolved') counters.unresolved += 1;\n  const wrongAuto = actual.decision === 'matched' && (expected.expected_decision !== 'matched' || (expected.expected_siret && actual.siret !== expected.expected_siret));\n  if (wrongAuto || actual.decision === 'missing') { counters.errors += 1; errors.push({ case_id: expected.case_id, stratum: expected.stratum, expected, actual, category: wrongAuto ? 'false_auto_match' : 'missing_result' }); }\n}\nconst auto_precision = counters.auto_validated ? counters.auto_correct / counters.auto_validated : null;\nconst coverage = counters.total ? counters.auto_validated / counters.total : 0;\nconst ambiguity_rate = counters.total ? counters.ambiguous / counters.total : 0;\nconst recommendation = auto_precision !== null && auto_precision >= 0.9 ? 'go_to_scoring' : 'raise_threshold_or_review_rules';\nreturn [{ json: { ...input, benchmark_report: { counters, auto_precision, coverage, ambiguity_rate, errors, recommendation, pappers_go: 'only_if_free_or_budget_approved', llm_go: 'not_v1' } } }];"
+      },
+      "id": "compute-benchmark-report",
+      "name": "Compute — Benchmark report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual benchmark report simulation": {
+      "main": [[{ "node": "Load — Benchmark context", "type": "main", "index": 0 }]]
+    },
+    "Load — Benchmark context": {
+      "main": [[{ "node": "Compute — Benchmark report", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-038-wf-38-company-matching-benchmark",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive benchmark report skeleton. It does not execute tests, matching, APIs or Data Table operations."
+  },
+  "tags": ["G8N", "benchmark", "matching", "precision", "local"]
+}

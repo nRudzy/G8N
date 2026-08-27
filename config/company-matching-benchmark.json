@@ -1,0 +1,30 @@
+{
+  "benchmark_version": "g8n.company-matching-benchmark.v1",
+  "dataset_version": "g8n.company-matching-benchmark.synthetic-50.v1",
+  "match_rule_version": "g8n.company-matching.v1",
+  "minimum_sample_size": 50,
+  "strata": ["explicit_siret", "exact_name_location", "trade_name", "typo", "homonym", "hidden_or_agency"],
+  "metrics": {
+    "auto_validated_precision_min": 0.9,
+    "ambiguities_are_not_successes": true,
+    "report_exact_and_tolerant_separately": true,
+    "coverage_formula": "auto_matched_count / total_cases",
+    "ambiguity_rate_formula": "ambiguous_count / total_cases"
+  },
+  "go_no_go": {
+    "pass_to_scoring_if_auto_precision_at_least": 0.9,
+    "else_raise_threshold": true,
+    "pappers_go_requires_free_or_approved_budget": true,
+    "llm_go": "not_in_v1_but_not_excluded_later"
+  },
+  "error_categories": [
+    "wrong_siret",
+    "wrong_siren",
+    "false_auto_match",
+    "missed_exact_match",
+    "unhelpful_ambiguity",
+    "agency_or_hidden_company",
+    "location_conflict",
+    "insufficient_reference_truth"
+  ]
+}
