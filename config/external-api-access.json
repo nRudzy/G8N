@@ -1,0 +1,88 @@
+{
+  "access_matrix_version": "g8n.external-api-access.v1",
+  "default_policy": {
+    "v1_budget_eur": 0,
+    "paid_sources_enabled": false,
+    "llm_enabled": false,
+    "secrets_storage": "local_n8n_credentials_only",
+    "do_not_commit": [
+      ".env",
+      "n8n credential exports",
+      "tokens",
+      "real API payloads"
+    ]
+  },
+  "providers": [
+    {
+      "provider": "france_travail",
+      "status": "credential_required_locally",
+      "v1_decision": "enabled_when_user_adds_local_credential",
+      "credential_name": "G8N_FRANCE_TRAVAIL_OAUTH",
+      "authentication": "OAuth2 client credentials in local n8n credential",
+      "cost_policy": "free_or_existing_account_only",
+      "quota_policy": {
+        "max_calls_per_run": 250,
+        "pagination_required": true,
+        "retry_on": [
+          429,
+          500,
+          502,
+          503,
+          504
+        ]
+      },
+      "fallback": "mock fixtures under fixtures/france-travail",
+      "cloud_validation": "not_executed"
+    },
+    {
+      "provider": "sirene_insee",
+      "status": "credential_required_locally",
+      "v1_decision": "enabled_when_user_adds_local_credential",
+      "credential_name": "G8N_SIRENE_API",
+      "authentication": "API key or OAuth mode configured locally according to the current INSEE portal",
+      "cost_policy": "free_or_existing_account_only",
+      "quota_policy": {
+        "max_calls_per_run": 500,
+        "cache_required": true,
+        "retry_on": [
+          429,
+          500,
+          502,
+          503,
+          504
+        ]
+      },
+      "fallback": "mock fixtures under fixtures/sirene",
+      "cloud_validation": "not_executed"
+    },
+    {
+      "provider": "pappers",
+      "status": "disabled_for_v1",
+      "v1_decision": "disabled_if_paid",
+      "credential_name": "G8N_PAPPERS_API_OPTIONAL",
+      "authentication": "optional local credential only if user later accepts a zero-cost or existing plan",
+      "cost_policy": "budget_zero_no_paid_calls",
+      "quota_policy": {
+        "max_calls_per_run": 0,
+        "whitelist_required": true,
+        "circuit_breaker": "always_closed_in_v1_default"
+      },
+      "fallback": "unknown health values and cautious normalization",
+      "cloud_validation": "not_executed"
+    },
+    {
+      "provider": "llm",
+      "status": "disabled_for_v1",
+      "v1_decision": "not_enabled_now_but_contract_kept_optional",
+      "credential_name": "G8N_LLM_OPTIONAL",
+      "authentication": "none in V1 default",
+      "cost_policy": "budget_zero_no_paid_calls",
+      "quota_policy": {
+        "max_calls_per_run": 0,
+        "requires_explicit_future_enablement": true
+      },
+      "fallback": "deterministic rules and unknown classification path",
+      "cloud_validation": "not_executed"
+    }
+  ]
+}

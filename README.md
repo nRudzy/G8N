@@ -62,6 +62,7 @@ See [docs/security-and-retention.md](docs/security-and-retention.md) before crea
 See [docs/adr/README.md](docs/adr/README.md) for Architecture Decision Records and the ADR template.
 See [docs/workflow-conventions.md](docs/workflow-conventions.md) for workflow naming, run envelopes, error contracts and the n8n review checklist.
 See [docs/fixtures-and-reset.md](docs/fixtures-and-reset.md) for synthetic fixtures, mock mode and targeted local reset procedures.
+See [docs/external-api-access.md](docs/external-api-access.md) for the free/local V1 API access matrix, credential names and disabled paid-provider policy.
 See [docs/france-travail-auth-spike.md](docs/france-travail-auth-spike.md) for the France Travail credential contract and unauthenticated cloud-safe auth spike skeleton.
 See [docs/france-travail-manual-run.md](docs/france-travail-manual-run.md) for the WF-10 manual search configuration and dry-run summary.
 See [docs/france-travail-pagination-checkpoints.md](docs/france-travail-pagination-checkpoints.md) for bounded pagination, retry and checkpoint policy.

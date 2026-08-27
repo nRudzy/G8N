@@ -1,0 +1,71 @@
+{
+  "name": "WF-03 Verify External Access Contract",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { access_matrix_version: 'g8n.external-api-access.v1', providers: ['france_travail', 'sirene_insee', 'pappers', 'llm'], v1_budget_eur: 0, paid_sources_enabled: false, llm_enabled: false, required_credentials: ['G8N_FRANCE_TRAVAIL_OAUTH', 'G8N_SIRENE_API'], optional_disabled_credentials: ['G8N_PAPPERS_API_OPTIONAL', 'G8N_LLM_OPTIONAL'], secret_values_checked: false, next_step: 'Create local n8n credentials by name, then run real provider smoke calls locally only.' } }];"
+      },
+      "id": "summarize-contract",
+      "name": "Summarize access contract",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $input.first().json;\nconst rows = cfg.providers.map((provider) => ({ provider, status: provider === 'pappers' || provider === 'llm' ? 'disabled_for_v1' : 'credential_required_locally', secret_value: '[never output]', budget_eur: cfg.v1_budget_eur }));\nreturn rows.map((json) => ({ json }));"
+      },
+      "id": "emit-safe-status",
+      "name": "Emit safe provider statuses",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Summarize access contract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize access contract": {
+      "main": [
+        [
+          {
+            "node": "Emit safe provider statuses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

@@ -1,0 +1,30 @@
+[
+  {
+    "provider": "france_travail",
+    "expected_status_without_secret": "credential_required_locally",
+    "expected_runtime_mode": "real API only after local credential is added",
+    "mock_path": "fixtures/france-travail/offres-smoke.json",
+    "must_not_expose": ["client_id", "client_secret", "access_token"]
+  },
+  {
+    "provider": "sirene_insee",
+    "expected_status_without_secret": "credential_required_locally",
+    "expected_runtime_mode": "real API only after local credential is added",
+    "mock_path": "fixtures/sirene/sirene-smoke.json",
+    "must_not_expose": ["api_key", "access_token"]
+  },
+  {
+    "provider": "pappers",
+    "expected_status_without_secret": "disabled_for_v1",
+    "expected_runtime_mode": "no paid call in V1 default",
+    "mock_path": "fixtures/pappers/pappers-smoke.json",
+    "must_not_expose": ["api_key"]
+  },
+  {
+    "provider": "llm",
+    "expected_status_without_secret": "disabled_for_v1",
+    "expected_runtime_mode": "deterministic rules only",
+    "mock_path": "fixtures/expected/job-llm-classification-cases.json",
+    "must_not_expose": ["api_key", "organization", "project"]
+  }
+]
