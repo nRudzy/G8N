@@ -1,0 +1,23 @@
+{
+  "fixture_schema_version": "g8n.fixture.pappers.v1",
+  "source": "synthetic_pappers_like_payload",
+  "capture_date": "2026-08-27",
+  "dataset": "smoke",
+  "scenario": "nominal company enrichment",
+  "results": [
+    {
+      "case_id": "nominal_company",
+      "siren": "000000001",
+      "expected_handling": "cache normalized legal enrichment without treating missing financials as zero",
+      "entreprise": {
+        "siren": "000000001",
+        "nom_entreprise": "SYNTHETIC LEARNING FRANCE",
+        "forme_juridique": "SAS",
+        "date_creation": "2019-01-15",
+        "entreprise_cessee": false,
+        "procedure_collective": false,
+        "effectif": "20 à 49 salariés"
+      }
+    }
+  ]
+}

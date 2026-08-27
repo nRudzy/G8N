@@ -1,0 +1,37 @@
+{
+  "name": "WF-02 — Reset local G8N fixtures",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual reset request",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const env = $env.G8N_ENVIRONMENT || 'unset';\nconst confirmation = $env.G8N_RESET_CONFIRMATION || 'unset';\nconst allowed = env === 'local' && confirmation === 'RESET_G8N_LOCAL_ONLY';\nreturn [{ json: { run_id: 'reset_g8n_fixtures_v1', correlation_id: 'reset_g8n_fixtures_v1', schema_version: 'g8n.workflow-envelope.v1', status: allowed ? 'success' : 'error', source: { workflow_id: 'WF-02', workflow_name: 'WF-02 — Reset local G8N fixtures', node_name: 'Guard — Local reset only' }, timestamps: { received_at: new Date().toISOString(), started_at: new Date().toISOString(), finished_at: new Date().toISOString() }, payload: { allowed, namespace: 'g8n-fixture', allowed_path_prefixes: ['data/raw/g8n-fixtures/', 'exports/g8n-fixtures/'], protected: ['workflows', 'credentials', 'SQLite internal config', 'other Docker volumes'] }, metadata: { environment: env, fixture: true }, errors: allowed ? [] : [{ code: 'G8N_RESET_REFUSED', category: 'configuration', message: 'Reset refused because G8N_ENVIRONMENT=local and G8N_RESET_CONFIRMATION=RESET_G8N_LOCAL_ONLY are required.', recoverable: true, masked: true }] } }];"
+      },
+      "id": "guard-local-reset-only",
+      "name": "Guard — Local reset only",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual reset request": {
+      "main": [[{ "node": "Guard — Local reset only", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "versionId": "g8n-015-wf-02-reset-local-fixtures",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive guarded reset skeleton. Local user must add Data Table delete and file delete nodes scoped to fixture namespace only."
+  },
+  "tags": ["G8N", "fixtures", "reset"]
+}

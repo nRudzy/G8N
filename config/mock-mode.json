@@ -1,0 +1,58 @@
+{
+  "schema_version": "g8n.mock-mode.v1",
+  "default_enabled": false,
+  "activation": {
+    "environment_variable": "G8N_MOCK_MODE",
+    "enabled_values": [
+      "1",
+      "true",
+      "yes"
+    ],
+    "dataset_variable": "G8N_MOCK_DATASET",
+    "default_dataset": "smoke"
+  },
+  "datasets": {
+    "smoke": {
+      "description": "Small deterministic dataset for offline workflow checks.",
+      "france_travail": "fixtures/france-travail/offres-smoke.json",
+      "sirene": "fixtures/sirene/sirene-smoke.json",
+      "pappers": "fixtures/pappers/pappers-smoke.json",
+      "expected_counts": "fixtures/expected/seed-counts.json"
+    },
+    "edge": {
+      "description": "Incomplete, duplicate, republished and ambiguous records.",
+      "france_travail": "fixtures/france-travail/offres-edge-cases.json",
+      "sirene": "fixtures/sirene/sirene-edge-cases.json",
+      "pappers": "fixtures/pappers/pappers-edge-cases.json",
+      "expected_counts": "fixtures/expected/seed-counts.json"
+    },
+    "performance": {
+      "description": "Small public-repo performance placeholder; local users can expand it without committing real data.",
+      "france_travail": "fixtures/france-travail/offres-performance-template.json",
+      "expected_counts": "fixtures/expected/seed-counts.json"
+    }
+  },
+  "seed": {
+    "run_id": "seed_g8n_fixtures_v1",
+    "idempotency_namespace": "g8n-fixture",
+    "target_tables": [
+      "source_runs",
+      "raw_offers",
+      "normalized_offers",
+      "companies",
+      "establishments",
+      "api_cache",
+      "error_events"
+    ]
+  },
+  "reset": {
+    "required_environment": "local",
+    "required_confirmation": "RESET_G8N_LOCAL_ONLY",
+    "allowed_path_prefixes": [
+      "data/raw/g8n-fixtures/",
+      "exports/g8n-fixtures/"
+    ],
+    "table_scope_column": "fixture_namespace",
+    "table_scope_value": "g8n-fixture"
+  }
+}

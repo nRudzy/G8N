@@ -1,0 +1,15 @@
+{
+  "fixture_schema_version": "g8n.fixture.france-travail.v1",
+  "source": "synthetic_template",
+  "capture_date": "2026-08-27",
+  "dataset": "performance",
+  "scenario": "template for generating a larger local-only batch without committing real data",
+  "template": {
+    "id_pattern": "FT-PERF-${sequence}",
+    "company_siren_pattern": "0099${sequence_padded_5}",
+    "departments": ["01", "13", "31", "33", "34", "44", "59", "69", "75", "92"],
+    "rome_codes": ["K2111", "M1502", "D1402", "N4101", "I1304"],
+    "publication_window_days": 30
+  },
+  "local_generation_note": "Expand this template locally if needed; do not commit large generated or real API payloads."
+}

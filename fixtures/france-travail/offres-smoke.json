@@ -1,0 +1,81 @@
+{
+  "fixture_schema_version": "g8n.fixture.france-travail.v1",
+  "source": "synthetic_france_travail_like_payload",
+  "capture_date": "2026-08-27",
+  "dataset": "smoke",
+  "scenario": "nominal offline search result with two France-wide offers",
+  "notes": "Synthetic data only. Shape is intentionally France Travail-like but must be checked against real API examples after G8N-003.",
+  "request": {
+    "motsCles": "formation alternance",
+    "region": null,
+    "departement": null,
+    "range": "0-49"
+  },
+  "response": {
+    "resultats": [
+      {
+        "id": "FT-SMOKE-0001",
+        "intitule": "Conseiller formation terrain",
+        "description": "Accompagner des clients professionnels sur des parcours de formation.",
+        "dateCreation": "2026-08-20T08:00:00.000Z",
+        "dateActualisation": "2026-08-26T09:30:00.000Z",
+        "lieuTravail": {
+          "libelle": "Paris 09",
+          "codePostal": "75009",
+          "commune": "75109",
+          "latitude": 48.876,
+          "longitude": 2.337
+        },
+        "romeCode": "K2111",
+        "romeLibelle": "Formation professionnelle",
+        "appellationlibelle": "Conseiller / Conseillère en formation",
+        "entreprise": {
+          "nom": "Synthetic Learning France",
+          "siren": "000000001"
+        },
+        "typeContrat": "CDI",
+        "experienceExige": "D",
+        "origineOffre": {
+          "origine": "1",
+          "urlOrigine": "https://example.invalid/offres/FT-SMOKE-0001"
+        }
+      },
+      {
+        "id": "FT-SMOKE-0002",
+        "intitule": "Chargé de recrutement régional",
+        "description": "Renforcer une équipe recrutement sur plusieurs sites en France.",
+        "dateCreation": "2026-08-21T10:00:00.000Z",
+        "dateActualisation": "2026-08-26T11:00:00.000Z",
+        "lieuTravail": {
+          "libelle": "Lyon 03",
+          "codePostal": "69003",
+          "commune": "69383",
+          "latitude": 45.760,
+          "longitude": 4.860
+        },
+        "romeCode": "M1502",
+        "romeLibelle": "Développement des ressources humaines",
+        "appellationlibelle": "Chargé / Chargée de recrutement",
+        "entreprise": {
+          "nom": "Synthetic Mobility Services",
+          "siren": "000000002"
+        },
+        "typeContrat": "CDD",
+        "experienceExige": "S",
+        "origineOffre": {
+          "origine": "1",
+          "urlOrigine": "https://example.invalid/offres/FT-SMOKE-0002"
+        }
+      }
+    ],
+    "filtresPossibles": [
+      {
+        "filtre": "departement",
+        "agregation": [
+          { "valeurPossible": "75", "nbResultats": 1 },
+          { "valeurPossible": "69", "nbResultats": 1 }
+        ]
+      }
+    ]
+  }
+}

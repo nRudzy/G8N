@@ -1,0 +1,30 @@
+{
+  "fixture_schema_version": "g8n.fixture.sirene.v1",
+  "source": "synthetic_sirene_like_payload",
+  "capture_date": "2026-08-27",
+  "dataset": "smoke",
+  "scenario": "exact SIREN/SIRET matches",
+  "results": [
+    {
+      "case_id": "exact_siren_single_establishment",
+      "query": { "siren": "000000001", "name": "Synthetic Learning France" },
+      "expected_resolution": "exact",
+      "uniteLegale": {
+        "siren": "000000001",
+        "denominationUniteLegale": "SYNTHETIC LEARNING FRANCE",
+        "categorieJuridiqueUniteLegale": "5710",
+        "activitePrincipaleUniteLegale": "85.59A",
+        "etatAdministratifUniteLegale": "A"
+      },
+      "etablissements": [
+        {
+          "siret": "00000000100011",
+          "siren": "000000001",
+          "etatAdministratifEtablissement": "A",
+          "codePostalEtablissement": "75009",
+          "libelleCommuneEtablissement": "PARIS 9"
+        }
+      ]
+    }
+  ]
+}

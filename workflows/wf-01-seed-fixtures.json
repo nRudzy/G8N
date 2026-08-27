@@ -1,0 +1,50 @@
+{
+  "name": "WF-01 — Seed deterministic fixtures",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual seed request",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const startedAt = new Date().toISOString();\nreturn [{ json: { run_id: 'seed_g8n_fixtures_v1', correlation_id: 'seed_g8n_fixtures_v1', schema_version: 'g8n.workflow-envelope.v1', source: { workflow_id: 'WF-01', workflow_name: 'WF-01 — Seed deterministic fixtures', node_name: 'Build — Seed envelope', origin: 'manual_local' }, timestamps: { received_at: startedAt, started_at: startedAt, finished_at: null }, payload: { namespace: 'g8n-fixture', dataset: 'smoke', files: ['fixtures/france-travail/offres-smoke.json', 'fixtures/sirene/sirene-smoke.json', 'fixtures/pappers/pappers-smoke.json', 'fixtures/expected/seed-counts.json'] }, metadata: { environment: 'local', fixture: true, idempotency_key: 'g8n-fixture:seed:v1', mock_mode: true } } }];"
+      },
+      "id": "build-seed-envelope",
+      "name": "Build — Seed envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn [{ json: { ...input, status: 'success', payload: { ...input.payload, required_local_steps: ['Create Data Tables from config/data-tables.json', 'Read fixture JSON files from repository checkout', 'Upsert rows with fixture_namespace=g8n-fixture', 'Compare counters with fixtures/expected/seed-counts.json'] }, timestamps: { ...input.timestamps, finished_at: new Date().toISOString() }, errors: [] } }];"
+      },
+      "id": "return-seed-plan",
+      "name": "Return — Success envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual seed request": {
+      "main": [[{ "node": "Build — Seed envelope", "type": "main", "index": 0 }]]
+    },
+    "Build — Seed envelope": {
+      "main": [[{ "node": "Return — Success envelope", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "versionId": "g8n-015-wf-01-seed-fixtures",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive local seed workflow skeleton. User must add local Data Table nodes after import."
+  },
+  "tags": ["G8N", "fixtures", "mock"]
+}

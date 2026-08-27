@@ -1,0 +1,76 @@
+{
+  "fixture_schema_version": "g8n.fixture.france-travail.v1",
+  "source": "synthetic_france_travail_like_payload",
+  "capture_date": "2026-08-27",
+  "dataset": "edge",
+  "scenario": "incomplete, duplicate and republished offers",
+  "notes": "Synthetic data only. No real company, candidate or private source payload is included.",
+  "cases": [
+    {
+      "case_id": "incomplete_company",
+      "expected_handling": "keep raw offer, create validation warning, do not invent SIREN",
+      "offer": {
+        "id": "FT-EDGE-0001",
+        "intitule": "Formateur logistique itinérant",
+        "description": "Animer des sessions en centres de formation.",
+        "dateCreation": "2026-08-19T08:00:00.000Z",
+        "dateActualisation": "2026-08-22T08:00:00.000Z",
+        "lieuTravail": {
+          "libelle": "France entière",
+          "codePostal": null,
+          "commune": null
+        },
+        "romeCode": "K2111",
+        "entreprise": {
+          "nom": null,
+          "siren": null
+        },
+        "typeContrat": "CDI"
+      }
+    },
+    {
+      "case_id": "duplicate_same_source_id",
+      "expected_handling": "idempotent upsert on source offer id",
+      "offers": [
+        {
+          "id": "FT-EDGE-DUP-0002",
+          "intitule": "Téléconseiller formation",
+          "dateCreation": "2026-08-18T08:00:00.000Z",
+          "dateActualisation": "2026-08-18T08:00:00.000Z",
+          "entreprise": { "nom": "Synthetic Contact Center", "siren": "000000003" },
+          "lieuTravail": { "libelle": "Lille", "codePostal": "59000", "commune": "59350" }
+        },
+        {
+          "id": "FT-EDGE-DUP-0002",
+          "intitule": "Téléconseiller formation",
+          "dateCreation": "2026-08-18T08:00:00.000Z",
+          "dateActualisation": "2026-08-24T08:00:00.000Z",
+          "entreprise": { "nom": "Synthetic Contact Center", "siren": "000000003" },
+          "lieuTravail": { "libelle": "Lille", "codePostal": "59000", "commune": "59350" }
+        }
+      ]
+    },
+    {
+      "case_id": "republished_offer",
+      "expected_handling": "link to previous fingerprint and keep publication history",
+      "offers": [
+        {
+          "id": "FT-EDGE-OLD-0003",
+          "intitule": "Commercial formation B2B",
+          "dateCreation": "2026-07-01T08:00:00.000Z",
+          "dateActualisation": "2026-07-10T08:00:00.000Z",
+          "entreprise": { "nom": "Synthetic Academy Group", "siren": "000000004" },
+          "lieuTravail": { "libelle": "Nantes", "codePostal": "44000", "commune": "44109" }
+        },
+        {
+          "id": "FT-EDGE-NEW-0003",
+          "intitule": "Commercial formation B2B",
+          "dateCreation": "2026-08-25T08:00:00.000Z",
+          "dateActualisation": "2026-08-26T08:00:00.000Z",
+          "entreprise": { "nom": "Synthetic Academy Group", "siren": "000000004" },
+          "lieuTravail": { "libelle": "Nantes", "codePostal": "44000", "commune": "44109" }
+        }
+      ]
+    }
+  ]
+}

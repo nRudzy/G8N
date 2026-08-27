@@ -1,0 +1,35 @@
+{
+  "fixture_schema_version": "g8n.fixture.pappers.v1",
+  "source": "synthetic_pappers_like_payload",
+  "capture_date": "2026-08-27",
+  "dataset": "edge",
+  "scenario": "quota and missing optional enrichment",
+  "results": [
+    {
+      "case_id": "quota_error",
+      "siren": "000000004",
+      "expected_handling": "record recoverable upstream error and keep existing cache untouched",
+      "http_status": 429,
+      "error": {
+        "code": "quota_exceeded",
+        "message": "Synthetic quota reached"
+      }
+    },
+    {
+      "case_id": "nominal_missing_financials",
+      "siren": "000000006",
+      "expected_handling": "preserve nulls; never convert unknown financial data to zero",
+      "entreprise": {
+        "siren": "000000006",
+        "nom_entreprise": "SYNTHETIC NULL FINANCIALS",
+        "forme_juridique": "SARL",
+        "date_creation": "2020-05-20",
+        "entreprise_cessee": false,
+        "procedure_collective": null,
+        "effectif": null,
+        "chiffre_affaires": null,
+        "resultat": null
+      }
+    }
+  ]
+}
