@@ -1,0 +1,61 @@
+{
+  "sirene_lookup_version": "g8n.sirene.lookup.v1",
+  "provider": "INSEE SIRENE",
+  "base_url": "https://api.insee.fr/api-sirene/3.11",
+  "credential_contract": {
+    "n8n_credential_name": "SIRENE API — local",
+    "auth_type": "bearer_or_oauth2_local",
+    "required_locally": true,
+    "do_not_commit_values": true
+  },
+  "allowed_lookup_modes": ["siret", "siren", "bounded_text"],
+  "request_policy": {
+    "prefer_explicit_siret": true,
+    "prefer_explicit_siren_before_text": true,
+    "bounded_text_max_candidates": 10,
+    "timeout_ms": 15000,
+    "retry": {
+      "max_attempts": 3,
+      "backoff_seconds": [2, 10, 30],
+      "retry_statuses": [408, 425, 429, 500, 502, 503, 504]
+    },
+    "quota": {
+      "daily_limit": null,
+      "per_minute_limit": null,
+      "source": "user configured after G8N-003",
+      "on_quota_error": "return_error_not_absent_company"
+    }
+  },
+  "cache_policy": {
+    "table": "sirene_cache",
+    "key_template": "{lookup_mode}:{normalized_query}",
+    "ttl_days": 30,
+    "serve_stale_on_provider_error": true,
+    "stale_status": "stale",
+    "store_payload_path_when_large": true
+  },
+  "normalized_response": {
+    "status_values": ["single_result", "zero_result", "multiple_results", "stale", "provider_error", "invalid_input"],
+    "candidate_fields": [
+      "siren",
+      "siret",
+      "legal_name",
+      "trade_name",
+      "naf_code",
+      "employee_band",
+      "administrative_status",
+      "establishment_status",
+      "address_line",
+      "postal_code",
+      "city",
+      "source_updated_at"
+    ],
+    "metrics_fields": ["cache_status", "api_call_count", "latency_ms", "result_count", "error_code"]
+  },
+  "privacy": {
+    "keep_only_matching_fields": true,
+    "no_personal_data_beyond_public_establishment_data": true,
+    "no_secret": true,
+    "no_paid_enrichment": true
+  }
+}

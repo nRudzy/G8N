@@ -338,6 +338,81 @@
       }
     },
     {
+      "name": "sirene_cache",
+      "upsert_key": "cache_key",
+      "columns": {
+        "cache_key": {
+          "type": "string",
+          "required": true
+        },
+        "lookup_mode": {
+          "type": "string",
+          "required": true,
+          "values": [
+            "siret",
+            "siren",
+            "bounded_text"
+          ]
+        },
+        "normalized_query": {
+          "type": "string",
+          "required": true
+        },
+        "status": {
+          "type": "string",
+          "required": true,
+          "values": [
+            "single_result",
+            "zero_result",
+            "multiple_results",
+            "stale",
+            "provider_error",
+            "invalid_input"
+          ]
+        },
+        "candidates_json": {
+          "type": "string",
+          "required": true
+        },
+        "payload_path": {
+          "type": "string|null",
+          "required": false
+        },
+        "payload_hash": {
+          "type": "string|null",
+          "required": false
+        },
+        "source_version": {
+          "type": "string",
+          "required": true
+        },
+        "fetched_at": {
+          "type": "datetime_utc",
+          "required": true
+        },
+        "expires_at": {
+          "type": "datetime_utc",
+          "required": true
+        },
+        "last_error_code": {
+          "type": "string|null",
+          "required": false
+        },
+        "api_call_count": {
+          "type": "integer",
+          "required": true
+        },
+        "latency_ms": {
+          "type": "integer|null",
+          "required": false
+        },
+        "updated_at": {
+          "type": "datetime_utc",
+          "required": true
+        }
+      }
+    },
+    {
       "name": "company_matches",
       "upsert_key": "match_key",
       "columns": {

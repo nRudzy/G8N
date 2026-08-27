@@ -1,0 +1,95 @@
+{
+  "fixture_version": "g8n.sirene-cache.expected.v1",
+  "sirene_lookup_version": "g8n.sirene.lookup.v1",
+  "source": "synthetic",
+  "cases": [
+    {
+      "name": "valid_siret_cache_miss_single_result",
+      "lookup_mode": "siret",
+      "query": "12345678900011",
+      "cache_status": "miss",
+      "provider_status": 200,
+      "expected": {
+        "status": "single_result",
+        "api_call_count": 1,
+        "result_count": 1,
+        "cache_write": true
+      }
+    },
+    {
+      "name": "valid_siret_cache_hit",
+      "lookup_mode": "siret",
+      "query": "12345678900011",
+      "cache_status": "hit",
+      "expected": {
+        "status": "single_result",
+        "api_call_count": 0,
+        "result_count": 1,
+        "cache_write": false
+      }
+    },
+    {
+      "name": "unknown_siret_zero_result",
+      "lookup_mode": "siret",
+      "query": "00000000000000",
+      "cache_status": "miss",
+      "provider_status": 404,
+      "expected": {
+        "status": "zero_result",
+        "api_call_count": 1,
+        "result_count": 0,
+        "error_code": null
+      }
+    },
+    {
+      "name": "bounded_text_multiple_results",
+      "lookup_mode": "bounded_text",
+      "query": "garage central bordeaux",
+      "cache_status": "miss",
+      "provider_status": 200,
+      "expected": {
+        "status": "multiple_results",
+        "api_call_count": 1,
+        "result_count_min": 2,
+        "requires_review": true
+      }
+    },
+    {
+      "name": "expired_cache_provider_429",
+      "lookup_mode": "siren",
+      "query": "123456789",
+      "cache_status": "expired",
+      "provider_status": 429,
+      "expected": {
+        "status": "stale",
+        "api_call_count": 1,
+        "error_code": "G8N_SIRENE_QUOTA",
+        "not_absent_company": true
+      }
+    },
+    {
+      "name": "provider_401",
+      "lookup_mode": "siret",
+      "query": "12345678900011",
+      "cache_status": "miss",
+      "provider_status": 401,
+      "expected": {
+        "status": "provider_error",
+        "api_call_count": 1,
+        "error_code": "G8N_SIRENE_AUTH"
+      }
+    },
+    {
+      "name": "provider_timeout",
+      "lookup_mode": "bounded_text",
+      "query": "atelier exemple 31000",
+      "cache_status": "miss",
+      "provider_status": "timeout",
+      "expected": {
+        "status": "provider_error",
+        "api_call_count": 1,
+        "error_code": "G8N_SIRENE_TIMEOUT"
+      }
+    }
+  ]
+}

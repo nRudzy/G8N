@@ -1,0 +1,79 @@
+{
+  "name": "WF-31 — SIRENE lookup with cache contract",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual SIRENE lookup simulation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { sirene_lookup_version: 'g8n.sirene.lookup.v1', lookup_mode: 'siret', query: null, normalized_query: null, cache_entry: null, provider_response: null, provider_error: null, metrics: { cache_status: 'not_wired', api_call_count: 0, latency_ms: null, result_count: 0, error_code: null }, next_step: 'Wire caller input, sirene_cache Data Table read/write and SIRENE HTTP Request locally.' } }];"
+      },
+      "id": "load-lookup-context",
+      "name": "Load — Lookup context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst rawQuery = String(input.query || '').trim();\nconst digits = rawQuery.replace(/\\D/g, '');\nconst normalizeText = (value) => String(value || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('fr-FR').replace(/[^a-z0-9 ]+/g, ' ').replace(/\\s+/g, ' ').trim();\nlet normalized_query = normalizeText(rawQuery);\nlet valid = true;\nif (input.lookup_mode === 'siret') { valid = digits.length === 14; normalized_query = digits; }\nelse if (input.lookup_mode === 'siren') { valid = digits.length === 9; normalized_query = digits; }\nelse if (input.lookup_mode === 'bounded_text') { valid = normalized_query.length >= 3; }\nelse valid = false;\nconst cache_key = `${input.lookup_mode}:${normalized_query}`;\nreturn [{ json: { ...input, normalized_query, cache_key, invalid_reason: valid ? null : 'G8N_SIRENE_INVALID_INPUT' } }];"
+      },
+      "id": "prepare-request",
+      "name": "Prepare — Request and cache key",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nif (input.invalid_reason) return [{ json: { ...input, status: 'invalid_input', metrics: { ...input.metrics, error_code: input.invalid_reason } } }];\nconst now = new Date();\nconst cache = input.cache_entry;\nif (cache && cache.expires_at && new Date(cache.expires_at) > now) {\n  return [{ json: { ...input, status: cache.status || 'single_result', candidates: cache.candidates || [], metrics: { ...input.metrics, cache_status: 'hit', result_count: (cache.candidates || []).length } } }];\n}\nreturn [{ json: { ...input, status: 'cache_miss_or_expired', stale_cache_entry: cache || null, metrics: { ...input.metrics, cache_status: cache ? 'expired' : 'miss' }, request_contract: { credential_name: 'SIRENE API — local', timeout_ms: 15000, max_candidates: input.lookup_mode === 'bounded_text' ? 10 : 1 } } }];"
+      },
+      "id": "classify-cache",
+      "name": "Classify — Cache state",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nif (!['cache_miss_or_expired'].includes(input.status)) return [{ json: input }];\nconst error = input.provider_error;\nif (error) {\n  const codeByStatus = { 401: 'G8N_SIRENE_AUTH', 403: 'G8N_SIRENE_FORBIDDEN', 408: 'G8N_SIRENE_TIMEOUT', 429: 'G8N_SIRENE_QUOTA' };\n  const errorCode = codeByStatus[error.status] || 'G8N_SIRENE_PROVIDER_ERROR';\n  if (input.stale_cache_entry && ['G8N_SIRENE_QUOTA', 'G8N_SIRENE_TIMEOUT', 'G8N_SIRENE_PROVIDER_ERROR'].includes(errorCode)) {\n    return [{ json: { ...input, status: 'stale', candidates: input.stale_cache_entry.candidates || [], metrics: { ...input.metrics, api_call_count: 1, error_code: errorCode, result_count: (input.stale_cache_entry.candidates || []).length } } }];\n  }\n  return [{ json: { ...input, status: 'provider_error', candidates: [], metrics: { ...input.metrics, api_call_count: 1, error_code: errorCode, result_count: 0 } } }];\n}\nconst candidates = input.provider_response?.candidates || [];\nconst status = candidates.length === 0 ? 'zero_result' : candidates.length === 1 ? 'single_result' : 'multiple_results';\nreturn [{ json: { ...input, status, candidates, cache_write: true, metrics: { ...input.metrics, api_call_count: 1, result_count: candidates.length, error_code: null } } }];"
+      },
+      "id": "normalize-provider-response",
+      "name": "Normalize — Provider response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual SIRENE lookup simulation": {
+      "main": [[{ "node": "Load — Lookup context", "type": "main", "index": 0 }]]
+    },
+    "Load — Lookup context": {
+      "main": [[{ "node": "Prepare — Request and cache key", "type": "main", "index": 0 }]]
+    },
+    "Prepare — Request and cache key": {
+      "main": [[{ "node": "Classify — Cache state", "type": "main", "index": 0 }]]
+    },
+    "Classify — Cache state": {
+      "main": [[{ "node": "Normalize — Provider response", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-031-wf-31-sirene-lookup-cache",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive SIRENE lookup/cache contract. No HTTP Request node is connected; no credential, API call or Data Table operation is executed by this export."
+  },
+  "tags": ["G8N", "SIRENE", "cache", "Data Tables", "local"]
+}
