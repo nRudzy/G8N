@@ -1,0 +1,82 @@
+{
+  "normalize_version": "g8n.job-offer-normalization.v1",
+  "source": "france_travail",
+  "target_table": "job_offers",
+  "upsert_key": "offer_key",
+  "offer_key_template": "{source}:{source_offer_id}",
+  "field_mapping": {
+    "source_offer_id": ["id", "source_offer_id"],
+    "title": ["intitule", "title"],
+    "description_excerpt": ["description"],
+    "contract_type": ["typeContrat", "contract_type"],
+    "declared_positions": ["nombrePostes", "declared_positions"],
+    "published_at": ["dateCreation", "published_at"],
+    "source_updated_at": ["dateActualisation", "source_updated_at"],
+    "declared_company_name": ["entreprise.nom", "company_name"],
+    "city": ["lieuTravail.libelle", "location.city"],
+    "postal_code": ["lieuTravail.codePostal", "location.postal_code"],
+    "latitude": ["lieuTravail.latitude"],
+    "longitude": ["lieuTravail.longitude"]
+  },
+  "normalization": {
+    "text": {
+      "trim": true,
+      "collapse_spaces": true,
+      "preserve_source_value": true,
+      "title_case_policy": "keep_source_case_for_title_and_store_normalized_lowercase"
+    },
+    "dates": {
+      "timezone": "UTC",
+      "invalid_date_status": "needs_review",
+      "missing_published_at_status": "needs_review"
+    },
+    "contract_types": {
+      "CDI": "CDI",
+      "CDD": "CDD",
+      "MIS": "Intérim",
+      "SAI": "Saisonnier",
+      "FRA": "Alternance",
+      "APP": "Apprentissage",
+      "PRO": "Professionnalisation"
+    },
+    "location": {
+      "country_default": "FR",
+      "postal_code_pattern": "^[0-9]{2,3}[0-9A-Z]{2}$",
+      "multi_location_status": "needs_review",
+      "missing_location_status": "needs_review"
+    }
+  },
+  "reason_codes": {
+    "missing_source_offer_id": "G8N_NORM_MISSING_SOURCE_OFFER_ID",
+    "missing_title": "G8N_NORM_MISSING_TITLE",
+    "empty_description": "G8N_NORM_EMPTY_DESCRIPTION",
+    "missing_company": "G8N_NORM_MISSING_COMPANY",
+    "invalid_date": "G8N_NORM_INVALID_DATE",
+    "missing_location": "G8N_NORM_MISSING_LOCATION",
+    "ambiguous_location": "G8N_NORM_AMBIGUOUS_LOCATION",
+    "unknown_contract": "G8N_NORM_UNKNOWN_CONTRACT"
+  },
+  "status_rules": {
+    "rejected": [
+      "missing_source_offer_id",
+      "missing_title"
+    ],
+    "needs_review": [
+      "empty_description",
+      "missing_company",
+      "invalid_date",
+      "missing_location",
+      "ambiguous_location",
+      "unknown_contract"
+    ],
+    "valid": "no rejected or needs_review reason"
+  },
+  "quality_metrics": [
+    "has_title",
+    "has_description",
+    "has_company",
+    "has_location",
+    "has_valid_date",
+    "has_known_contract"
+  ]
+}

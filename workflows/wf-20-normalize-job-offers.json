@@ -1,0 +1,66 @@
+{
+  "name": "WF-20 — Normalize raw France Travail offers",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Trigger — Manual normalization batch",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { normalize_version: 'g8n.job-offer-normalization.v1', source: 'france_travail', raw_rows: [], reason_codes: { missing_source_offer_id: 'G8N_NORM_MISSING_SOURCE_OFFER_ID', missing_title: 'G8N_NORM_MISSING_TITLE', empty_description: 'G8N_NORM_EMPTY_DESCRIPTION', missing_company: 'G8N_NORM_MISSING_COMPANY', invalid_date: 'G8N_NORM_INVALID_DATE', missing_location: 'G8N_NORM_MISSING_LOCATION', ambiguous_location: 'G8N_NORM_AMBIGUOUS_LOCATION', unknown_contract: 'G8N_NORM_UNKNOWN_CONTRACT' }, contract_map: { CDI: 'CDI', CDD: 'CDD', MIS: 'Intérim', SAI: 'Saisonnier', FRA: 'Alternance', APP: 'Apprentissage', PRO: 'Professionnalisation' }, next_step: 'Wire raw_job_offers Data Table reads and raw file reads locally. This skeleton does not read files or write Data Tables.' } }];"
+      },
+      "id": "load-normalization-policy",
+      "name": "Load — Normalization policy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst clean = (value) => value == null ? null : String(value).replace(/\\s+/g, ' ').trim();\nconst lower = (value) => clean(value)?.toLocaleLowerCase('fr-FR') || null;\nconst validDate = (value) => { const cleaned = clean(value); if (!cleaned) return null; const d = new Date(cleaned); return Number.isNaN(d.getTime()) ? null : d.toISOString(); };\nconst rows = (input.raw_rows || []).map((row, index) => {\n  const payload = row.payload || {};\n  const sourceOfferId = clean(payload.id || row.source_offer_id);\n  const title = clean(payload.intitule || payload.title);\n  const description = clean(payload.description);\n  const company = clean(payload.entreprise?.nom || payload.company_name);\n  const city = clean(payload.lieuTravail?.libelle || payload.location?.city);\n  const postalCode = clean(payload.lieuTravail?.codePostal || payload.location?.postal_code);\n  const contractCode = clean(payload.typeContrat || payload.contract_type);\n  const publishedAt = validDate(payload.dateCreation || payload.published_at);\n  const reasons = [];\n  if (!sourceOfferId) reasons.push(input.reason_codes.missing_source_offer_id);\n  if (!title) reasons.push(input.reason_codes.missing_title);\n  if (!description) reasons.push(input.reason_codes.empty_description);\n  if (!company) reasons.push(input.reason_codes.missing_company);\n  if ((payload.dateCreation || payload.published_at) && !publishedAt) reasons.push(input.reason_codes.invalid_date);\n  if (!city && !postalCode) reasons.push(input.reason_codes.missing_location);\n  if (contractCode && !input.contract_map[contractCode]) reasons.push(input.reason_codes.unknown_contract);\n  const rejected = reasons.includes(input.reason_codes.missing_source_offer_id) || reasons.includes(input.reason_codes.missing_title);\n  const status = rejected ? 'rejected' : reasons.length ? 'needs_review' : 'valid';\n  const quality = { has_title: Boolean(title), has_description: Boolean(description), has_company: Boolean(company), has_location: Boolean(city || postalCode), has_valid_date: Boolean(publishedAt), has_known_contract: Boolean(!contractCode || input.contract_map[contractCode]) };\n  return { offer_key: sourceOfferId ? `${input.source}:${sourceOfferId}` : `${input.source}:missing-${index}`, raw_offer_key: row.raw_offer_key || null, source: input.source, source_offer_id: sourceOfferId, title: title || '', normalized_title: lower(title) || '', description_excerpt: description ? description.slice(0, 500) : null, job_family: null, contract_type: input.contract_map[contractCode] || contractCode || null, declared_positions: Number.isFinite(Number(payload.nombrePostes)) ? Number(payload.nombrePostes) : null, location_label: city, postal_code: postalCode, city, location_country: 'FR', declared_company_name: company, published_at: publishedAt, normalize_version: input.normalize_version, normalization_status: status, normalization_reasons_json: JSON.stringify(reasons), quality_json: JSON.stringify(quality), status: rejected ? 'rejected' : 'active', updated_at: new Date().toISOString() };\n});\nreturn [{ json: { ...input, job_offer_upserts: rows, quality_report: { total: rows.length, valid: rows.filter(r => r.normalization_status === 'valid').length, needs_review: rows.filter(r => r.normalization_status === 'needs_review').length, rejected: rows.filter(r => r.normalization_status === 'rejected').length } } }];"
+      },
+      "id": "normalize-raw-offers",
+      "name": "Normalize — Raw offers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn [{ json: { ...input, next_step: 'Review job_offer_upserts, then wire Data Table upsert locally. Invalid rows stay isolated with normalization_status and reason codes.' } }];"
+      },
+      "id": "return-normalization-plan",
+      "name": "Return — Normalization plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 0]
+    }
+  ],
+  "connections": {
+    "Trigger — Manual normalization batch": {
+      "main": [[{ "node": "Load — Normalization policy", "type": "main", "index": 0 }]]
+    },
+    "Load — Normalization policy": {
+      "main": [[{ "node": "Normalize — Raw offers", "type": "main", "index": 0 }]]
+    },
+    "Normalize — Raw offers": {
+      "main": [[{ "node": "Return — Normalization plan", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "versionId": "g8n-024-wf-20-normalize-job-offers",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Inactive raw-to-canonical normalization skeleton. No Data Table write, file read or API call is executed by this export."
+  },
+  "tags": ["G8N", "France Travail", "normalization", "Data Tables"]
+}

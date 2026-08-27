@@ -66,6 +66,7 @@ See [docs/france-travail-auth-spike.md](docs/france-travail-auth-spike.md) for t
 See [docs/france-travail-manual-run.md](docs/france-travail-manual-run.md) for the WF-10 manual search configuration and dry-run summary.
 See [docs/france-travail-pagination-checkpoints.md](docs/france-travail-pagination-checkpoints.md) for bounded pagination, retry and checkpoint policy.
 See [docs/raw-ingestion-persistence.md](docs/raw-ingestion-persistence.md) for idempotent run and raw offer persistence.
+See [docs/job-offer-normalization.md](docs/job-offer-normalization.md) for France Travail raw-to-canonical offer mapping.
 
 ## Version
 

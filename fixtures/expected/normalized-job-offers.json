@@ -1,0 +1,46 @@
+{
+  "fixture_version": "g8n.normalized-job-offers.expected.v1",
+  "source": "synthetic",
+  "cases": [
+    {
+      "name": "complete_offer",
+      "raw_offer_key": "france_travail:FT-SMOKE-001",
+      "expected": {
+        "normalization_status": "valid",
+        "reasons": [],
+        "quality": {
+          "has_title": true,
+          "has_description": true,
+          "has_company": true,
+          "has_location": true,
+          "has_valid_date": true,
+          "has_known_contract": true
+        }
+      }
+    },
+    {
+      "name": "missing_company",
+      "raw_offer_key": "france_travail:FT-EDGE-002",
+      "expected": {
+        "normalization_status": "needs_review",
+        "reasons": ["G8N_NORM_MISSING_COMPANY"]
+      }
+    },
+    {
+      "name": "invalid_date",
+      "raw_offer_key": "france_travail:FT-EDGE-003",
+      "expected": {
+        "normalization_status": "needs_review",
+        "reasons": ["G8N_NORM_INVALID_DATE"]
+      }
+    },
+    {
+      "name": "missing_title",
+      "raw_offer_key": "france_travail:FT-EDGE-004",
+      "expected": {
+        "normalization_status": "rejected",
+        "reasons": ["G8N_NORM_MISSING_TITLE"]
+      }
+    }
+  ]
+}
